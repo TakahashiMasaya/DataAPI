@@ -1,0 +1,2741 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title></title>
+<script src="./plugins/jquery-3.1.0.min.js"></script>
+<script src="./plugins/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="./plugins/reset.css">
+<link rel="stylesheet" href="./plugins/jquery-ui.min.css">
+
+
+
+
+
+<style>
+body {
+	background: linear-gradient(to bottom left, #E2E8E6 0%, #CDD3CD 100%), linear-gradient(to left, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.12) 100%);
+	background-blend-mode: screen;
+	font-family: Roboto, "Droid Sans", "游ゴシック", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", sans-serif;
+	min-width:1000px;
+	overflow:hidden;
+}
+body * {box-sizing:border-box;word-break:break-all;}
+
+/*=========================================================
+//	Loading
+=========================================================*/
+#g_loading {
+    background-color: rgba(255,255,255,0.8);
+	bottom:0px;
+    display:none;
+    height:calc(100% - 52px);
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+	}
+#g_loading.on {display:block;}
+#g_loading.on #loading_icon{
+	animation:ani_loading_opacity 0.1s linear infinite;
+	bottom:0px;
+	display:block;
+	height:200px;
+	left:0px;
+	margin:auto;
+	position:absolute;
+	right:0px;
+	top:0px;
+	width:200px;
+	}
+#g_loading.on #loading_rotate {
+	border:5px solid #0066ff;
+	border-radius:50%;
+	border-right-color:transparent;
+	height:30px;
+	margin:auto;
+	position:absolute;
+	top:0px;left:0px;right:0px;bottom:0px;
+	width:30px;
+	}
+#g_loading.on #loading_rotate.out {
+	animation:ani_loading_rotate_out 1s linear infinite;
+	height:50px;
+	width:50px;
+	}
+#g_loading.on #loading_rotate.in {animation:ani_loading_rotate_in 1s linear infinite;}
+#g_loading.on #loading_icon:after {
+    bottom:40px;
+    content:'Loading...';
+    color:#0066ff;
+    letter-spacing:3px;
+    font-weight:bold;
+    position:absolute;
+    text-align:center;
+    width:200px;
+	}
+@keyframes ani_loading_rotate_out {
+	0%{transform:rotate(0deg);}
+	50%{transform:rotate(180deg);}
+	100%{transform:rotate(360deg);}
+	}
+@keyframes ani_loading_rotate_in {
+	0%{transform:rotate(0deg);}
+	50%{transform:rotate(-180deg);}
+	100%{transform:rotate(-360deg);}
+	}
+@keyframes ani_loading_opacity {
+	0%{opacity:1;}
+	50%{opacity:0.5;}
+	100%{opacity:1;}
+	}
+
+
+/*=========================================================
+//	jQuery UI Dialog
+=========================================================*/
+#g_dialog{
+	background-color:rgba(255,255,255,1);
+	display:none;
+	height:100%;
+	overflow:hidden;
+	min-width:1000px;
+	padding-top:50px;
+	position:absolute;
+	top:0px;
+	transform:translate3d(100%,0px,1000px);
+	transition:transform 0.2s ease-out 0.2s;
+	transform-style:preserve-3d;
+	width:100%;
+	z-index:1000;
+}
+#g_dialog.on{transform:translate3d(0px,0px,1000px);}
+#g_dialog header {
+	background-color: rgba(23,23,23,1);
+    color: rgba(255,255,255,1);
+	font-size: 1.2em;
+	height:50px;
+    text-align:center;
+    position:fixed;
+    top: 0px;
+	width: 100%;
+}
+#g_dialog header span{
+	bottom:0px;left:0px;right:0px;top:0px;
+	display:none;
+	height:1em;
+	margin:auto;
+	position:absolute;
+}
+#g_dialog_inner{
+	height:100%;
+	overflow-x:hidden;
+	padding:20px;
+}
+
+#g_dialog_inner form .box{padding-bottom:2em;}
+#g_dialog_inner form .box:last-of-type{padding-bottom:0px;}
+#g_dialog_inner form input,
+#g_dialog_inner form select,
+#g_dialog_inner form textarea,
+#g_dialog_inner form button {
+	background-color:rgba(255,255,255,1);
+	border:1px solid #aaaaaa;
+	border-radius:5px;
+	font-size:1em;
+	height:2.5em;
+	padding:0px 10px;
+	width:100%;
+}
+#g_dialog_inner form textarea {height:20em;padding:10px;}
+#g_dialog_inner form button {border-width: 2px; width:inherit;}
+#g_dialog_inner form .box.title input{
+	font-size:1.5em;border-width:2px;
+}
+#g_dialog_inner form .box.title input[type="text"][disabled]{
+	background-color:rgba(200,200,200,1);
+	cursor:not-allowed;
+}
+#g_dialog_inner form p{padding-bottom:0.5em;}
+
+#g_dialog_inner form .template_options{
+    background-color: rgba(220,220,220,1);
+    border-radius: 5px;
+	display:none;
+    margin-bottom: 2em;
+	padding: 20px;
+}
+#g_dialog_inner form .template_options.on{display:block;}
+
+#g_dialog_inner form .box_arc {
+    background-color: #cccccc;
+	border: 1px solid rgba(0,0,0,0.5);
+    border-radius: 5px;
+	margin-bottom: 20px;
+	padding: 20px;
+}
+#g_dialog_inner form .box_arc div#new_archive_type {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+	list-style: none;
+    margin-bottom: 20px;
+}
+#g_dialog_inner form .box_arc div#new_archive_type > div {
+	background-color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.4);
+    border-radius: 5px;
+	cursor:pointer;
+    margin-bottom: 10px;
+	padding: 10px;
+	width: 24%;
+}
+#g_dialog_inner form .box_arc .drop_set_map {padding:20px; width:100%;}
+#g_dialog_inner form .box_arc .drop_set_map table {width:100%;}
+
+#g_dialog_inner form .box_arc .drop_set_map table th,
+#g_dialog_inner form .box_arc .drop_set_map table td {
+    border-bottom: 1px solid #cccccc;
+    display: flex;
+    justify-content: flex-start;
+    position: relative;
+    z-index: 1;
+}
+#g_dialog_inner form .box_arc .drop_set_map table th {background-color:rgba(0,0,0,0.5);color:rgba(255,255,255,1);}
+#g_dialog_inner form .box_arc .drop_set_map table td {background-color:rgba(255,255,255,1);}
+#g_dialog_inner form .box_arc .drop_set_map table th > div,
+#g_dialog_inner form .box_arc .drop_set_map table td > div{
+    border-right: 1px solid #cccccc;
+	padding:5px;
+    position: relative;
+    z-index: 1;
+}
+#g_dialog_inner form .box_arc .drop_set_map table div.type{width:220px;}
+#g_dialog_inner form .box_arc .drop_set_map table div.type span{
+	left:0px;top:0px;right:0px;bottom:0px;
+	height:50%;
+	margin:auto;
+	position:absolute;
+	text-align:center;
+	width:50%;
+}
+#g_dialog_inner form .box_arc .drop_set_map table div.path{width:100%;}
+#g_dialog_inner form .box_arc .drop_set_map table div.publishing{width:300px;}
+
+#g_dialog_inner form .box_arc .drop_set_map table div.path .off{display:none;}
+
+
+/*=========================================================
+//	mainmenu
+=========================================================*/
+#g_mainmenu {
+    background-color:rgba(0,0,0,0.8);
+	height:52px;
+	min-width:1000px;
+    position:fixed;
+    transition:all 0.2s ease-out 0.2s;
+    transform-style:preserve-3d;
+    width:100%;
+    z-index:101;
+}
+#g_mainmenu.on {height:280px;}
+#g_mainmenu #g_mainmenu_header{
+	display:flex;
+	flex-wrap:nowrap;
+	padding:10px;
+	position:relative;
+	text-align:right;
+	transform:translate3d(0px,0px,100px);
+	width:100%;
+}
+#g_mainmenu #g_mainmenu_header .box{
+	margin-right:20px;
+}
+#g_mainmenu #g_mainmenu_header .menu{
+	display:inline-block;
+	flex-grow:1;
+	height:2em;
+	overflow-y:hidden;
+}
+#g_mainmenu #g_mainmenu_header .menu_inner{width:2000px;}
+#g_mainmenu #g_mainmenu_header .menu a{
+	background-color: rgba(255,255,255,0.3);
+	color: rgba(255,255,255,1);
+    display: block;
+	float: left;
+	margin: 0px 0.1em;
+    padding: 0.5em;
+    text-align: center;
+	width: 9em;
+}
+
+#g_mainmenu #g_mainmenu_header .user{
+	color:rgba(255,255,255,1);
+	height:2em;
+	margin-right:20px;
+	white-space:nowrap;
+}
+#g_mainmenu #g_mainmenu_header .user *{
+	display:inline-block;
+	vertical-align:middle;
+}
+#g_mainmenu #g_mainmenu_header .user a{
+	border-bottom:1px dotted transparent;
+	color:rgba(255,255,255,0.8);
+	text-decoration:none;
+}
+#g_mainmenu #g_mainmenu_header .user a:hover{
+	border-bottom:1px dotted rgba(255,255,255,1); color:rgba(255,255,255,1);
+}
+#g_mainmenu #g_mainmenu_header .user .user_pic{
+	background-size:cover;
+	border:1px solid rgba(255,255,255,1);
+	width:2em;
+}
+#g_mainmenu #g_mainmenu_header .user .user_pic img{height:auto;width:100%;}
+
+#g_mainmenu #g_mainmenu_header .other{
+	]color:rgba(255,255,255,1);
+	line-height:2em;
+	white-space:nowrap;
+}
+#g_mainmenu #g_mainmenu_header .other a{
+	border-bottom:1px dotted transparent;
+	color:rgba(255,255,255,0.8);
+	text-decoration:none;
+}
+#g_mainmenu #g_mainmenu_header .other a:hover{
+	border-bottom:1px dotted rgba(255,255,255,1); color:rgba(255,255,255,1);
+}
+
+#g_mainmenu #g_mainmenu_header .search input#g_mainmenu_search_text {
+    border:none;
+	color:rgba(0,0,0,0.8);
+    font-size:1.0em;
+    padding:0.5em;
+    border-radius:5px;
+    transition: width 0.3s;
+    width:2.5em;
+}
+#g_mainmenu #g_mainmenu_header .search input#g_mainmenu_search_text:focus {
+	width:20em;
+}
+
+#g_mainmenu #g_mainmenu_icon {cursor:pointer;}
+#g_mainmenu #g_mainmenu_icon_inner {
+    border-top:20px solid #ffffff;
+    border-left:20px solid transparent;
+    border-right:20px solid transparent;
+    height:0px;
+    margin:6px auto;
+    transform:rotateZ(0deg);
+    transition:transform 0.2s ease-out 0.2s;
+    width:0px;
+}
+#g_mainmenu.on #g_mainmenu_icon_inner {transform:rotateZ(180deg);}
+
+
+#g_mainmenu #g_mainmenu_wrapper{
+	height:calc(100% - 53px);
+	overflow-y:hidden;
+	position:relative;
+}
+#g_mainmenu #g_mainmenu_inner{
+	height:220px;
+	overflow-x:auto;
+	overflow-y:hidden;
+	position:absolute;
+	top:-220px;
+	transition:all 0.2s ease-out 0.2s;
+}
+#g_mainmenu.on #g_mainmenu_inner{
+	top:0px;
+}
+#g_mainmenu_lists{display:flex;flex-wrap:nowrap;}
+#g_mainmenu_lists .w_list {
+    border-radius:5px;
+    flex:none;
+    height:210px;
+}
+#g_mainmenu_lists .w_list::after {
+    clear: both;
+    content:'';
+    display:table;
+}
+#g_mainmenu_lists .w_list .w_list_inner {
+	background: linear-gradient(to bottom, #E1E6EC 0%, #F0F4F7 100%), linear-gradient(to bottom, #E1E6EC 0%, #F0F4F7 100%);
+	background-blend-mode: normal,color-burn;
+	border-radius:5px;
+	margin:0px 10px;
+	overflow:hidden;
+}
+#g_mainmenu_lists .header {
+	background-color:#52A437;
+	border-radius:5px 5px 0px 0px;
+	box-shadow:0px 1px 0px 0px rgba(100,100,100,0.5);
+    color:#ffffff;
+	display:flex;
+    font-weight: bold;
+	padding:5px 10px;
+	position:relative;
+}
+#g_mainmenu_lists .header .title {
+	flex-grow:1;
+	line-height:1.5em;
+	overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	width:0px;
+}
+#g_mainmenu_lists .header .tab_bts {
+    position: relative;
+    right:0px;
+    white-space: nowrap;
+    top:0px;
+}
+#g_mainmenu_lists .header .bt {
+    background-color: rgba(255,255,255,0.9);
+    background-position: center center;
+    background-size:cover;
+    border-radius: 2px;
+    box-shadow: 0.5px 0.5px 0px 0px rgba(0,0,0,1);
+    cursor: pointer;
+    display: inline-block;
+    height: 1.5em;
+    margin: auto;
+    padding: 0px;
+    position: relative;
+    vertical-align: middle;
+    width: 1.5em;
+}
+#g_mainmenu_lists .w_list .box_list{
+    display:flex;
+    flex-wrap:nowrap;
+	padding:10px;
+}
+#g_mainmenu_lists .w_list .box_list .box{
+    background-color:#ffffff;
+	box-shadow:1px 1px 0px 0px rgba(100,100,100,0.5);
+	cursor:pointer;
+    height:155px;
+    margin:0px 10px;
+    padding:5px;
+	position:relative;
+    width:160px;
+}
+#g_mainmenu_lists .w_list .box_list .w_box.box{
+	background-color:#d3eacb;
+	border:1px solid #52A437;
+}
+#g_mainmenu_lists .w_list .box_list .b_box.box{
+	background-color:#d5e7f3;
+	border:1px solid #0076BF;
+}
+
+#g_mainmenu_lists .w_list .box_list .box .box_dropped{display:none;}
+#g_mainmenu_lists .w_list .box_list .box.on .box_dropped{
+    background-color: rgba(255,0,0,0.5);
+	color: #ffffff;
+	display:block;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+	padding:10px;
+    position: absolute;
+    text-align: center;
+	width: 100%;
+}
+#g_mainmenu_lists .w_list .box_list .box.on .box_dropped p{
+	display:block;
+	position:relative;
+	top:50%;
+	transform:translateY(-50%);
+}
+
+#g_mainmenu_lists .w_list .box_list .box .box_img {
+    margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
+}
+#g_mainmenu_lists .w_list .box_list .box_img img {border:1px solid #aaaaaa;}
+#g_mainmenu_lists .w_list .box_list p.title {height: 37px; line-height:1.2em;overflow:hidden;text-overflow:ellipsis;width:100%;}
+#g_mainmenu_lists .w_list .box_list .box:not(.on):hover{
+    box-shadow:0px 0px 3px 3px #ffff00;
+}
+#g_mainmenu_lists .w_list .box_list .box.box-hover-class{
+    border:1px solid #999999;
+}
+#g_mainmenu_lists .w_list .box_list .box .box_delete{
+	background-size:cover;
+	display:none;
+	height:30px;
+	position:absolute;
+	right:-10px;
+	top:-10px;
+	width:30px;
+	z-index:1;
+}
+#g_mainmenu_lists .w_list .box_list .box:not(.box_has_b):not(.on):hover .box_delete{display:block;}
+
+/*=========================================================
+//	droppable
+=========================================================*/
+#g_droppable {
+	display:none;
+	left:0px;bottom:0px;
+	height:calc(100% - 280px);
+	min-width:1000px;
+	position:absolute;
+	text-align:center;
+	transition:0.4s all;
+	width:100%;
+	z-index:100;
+}
+#g_droppable.on {display:block;}
+#g_droppable.on.over.able {background-color:rgba(255,0,0,0.3);}
+#g_droppable.on.over.disable {background-color:rgba(150,0,150,0.3);}
+#g_droppable.on.over:before {
+	bottom:0px;left:0px;right:0px;top:0px;
+	color:#ffffff;
+	font-size:300%;
+	font-weight:bold;
+	height:1em;
+	margin:auto;
+	position:absolute;
+}
+#g_droppable.on.over.able:before {content:'DROP HERE!';}
+#g_droppable.on.over.disable:before {content:'CAN\'T DROP. IT\'S ALWAYS ON THE STAGE HERE!';}
+#g_droppable.on.over:after {
+	border:5px solid #ffffff;
+	bottom:0px;left:0px;right:0px;top:0px;
+	content:'';
+	height:90%;
+	margin:auto;
+	position:absolute;
+	width:90%;
+}
+
+
+/*=========================================================
+//	main
+=========================================================*/
+#g_main{
+	overflow:hidden;
+	padding-top:4em;
+	position:relative;
+	z-index:1;
+}
+#g_main_inner{
+    display:flex;
+    flex-wrap:nowrap;
+    height:calc(100% - 5em);
+    justify-content:flex-start;
+    position:relative;
+    transform:translate3d(0px,0px,0px);
+}
+#g_main .g_main_list{
+	background-color:rgba(240,240,240,1);
+    border-radius:5px;
+    box-shadow:0px 0px 4px 0px rgba(0,0,0,0.3);
+    flex-grow:1;
+    margin:5px;
+	position:relative;
+    width:0px;
+}
+#g_main .g_main_list.on:before {
+	animation:ani_g_main_list 1s linear infinite;
+	background-color: rgba(255,255,0,0.5);
+	content: '';
+	height: 100%;
+	position: absolute;
+	width: 100%;
+	opacity:0;
+	z-index: 5;
+}
+#g_main .g_main_list.load:before {
+	background-color: rgba(255,255,255,0.9);
+	border-radius:5px;
+	content: '';
+	height: 100%;
+	position: absolute;
+	width: 100%;
+	z-index: 5;
+}
+#g_main .g_main_list.load:after {
+	animation:ani_g_main_list 0.3s linear infinite;
+    bottom: 0px;
+    top: 0px;
+    content: 'rebuilding....';
+	font-size: 200%;
+	font-weight:bold;
+    height: 1em;
+    margin: auto 0px;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    z-index: 6;
+}
+@keyframes ani_g_main_list {
+	0%{opacity:0.5;}
+	50%{opacity:1;}
+	100%{opacity:0.5;}
+}
+#g_main .g_main_list.w_box{border:1px solid #52A437;}
+#g_main .g_main_list.b_box{border:1px solid #0076BF;}
+
+#g_main .g_main_list .blogid{display:none;}
+#g_main .g_main_list .tab {
+    border-radius: 3px 3px 0px 0px;
+    color: #ffffff;
+	cursor:pointer;
+	display:flex;
+	font-weight:bold;
+	justify-content:flex-start;
+    position:relative;
+}
+#g_main .g_main_list.w_box .tab {background-color:#52A437;}
+#g_main .g_main_list.b_box .tab {background-color:#0076BF;}
+#g_main .g_main_list .tab .title {
+	flex-grow:1;
+    overflow:hidden;
+	padding:1em;
+	position:relative;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+	width:0px;
+}
+#g_main .g_main_list .tab .title.b {
+	background-color:#0076BF;
+	padding-left:2em;
+}
+#g_main .g_main_list .tab .title.b:before {
+	content: '';
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAtCAYAAAB1R+FKAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABWWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS40LjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyI+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgpMwidZAAAB0ElEQVRIDZ2WTShEURTH74zMQizUlCKLSQ2LsaFYzMYsKCkbzYIFU0hqsB6rsTF7KUlKFiwmGyXKwiwo+dgwC6ZQQtSUBSmDxvk/704z8+697z5n8T7P7/7euZ1Tj509HOYpupmDcG+l19jXT27ZAcPc19lLdvF86iPbsC7oRuLSSQK2OIE1OqABvX5k2W4m6SMgqg0hcftqE7ZxHZthAuTEVoC47eX9yba2Egi2ZHrVQwssYBFZlEBIOrjZYWQbotr82hASTVvMEWRns3weX11lk0KwnT8eRag2SzNLIRjRzBSzOBSHEkIzk62r3KaEsLpodGwh0ejYQrDx0cE1QgvizUy1GYOqBWF1c3SMZtaGuI34qDYE2/F9CqceR9BAIAJoXhtq9ray9oZgyuVy7WtD3AKVFlRs0YZmgnM5Sp4AgLA1hZr6WF11/QbVkvlDNKBwYBSWBAdwVppEFltIZFFCMosSMi3TSCoPYU0jbVPYsTjt2Fs5gHsLVFvlZZ2NIezYoggQQv0tg0qLBYKl1x++U1ksECyVFZ4VWS0AEIWadC0lkGmR7pihMA+GiVvos9aLX8quDWiyI4Za4rIky/PY3lg+9/15a3mhevCff6NfkeHRZckQ2C8AAAAASUVORK5CYII=) no-repeat;
+	background-color:#0076BF;
+	background-size: 10px 100%;
+	height: 100%;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 10px;
+	z-index: 10;
+}
+#g_main .g_main_list.b_box .tab .title.w {
+	background-color:#52A437;
+	flex-grow:0;
+	min-width:30%;
+}
+#g_main .g_main_list.w_box .tab .title.b {
+	visibility:hidden;
+}
+
+#g_main .g_main_list .tab section.tab_bts {
+	display:flex;
+	overflow:hidden;
+	padding:0.5em;
+	white-space:nowrap;
+	flex-basis:10em;
+}
+#g_main .g_main_list .tab section.tab_bts .bt {
+    background-color:rgba(255,255,255,0.6);
+	background-size:80%;
+    border-radius:5px;
+    cursor:pointer;
+    display:inline-block;
+    height:2.0em;
+    margin-right:5px;
+    position:relative;
+    text-indent:-9999px;
+    width:25%;
+}
+#g_main .g_main_list .tab section.tab_bts .bt:last-of-type{margin-right:0px;}
+#g_main .g_main_list .tab section.tab_bts .bt:hover{background-color:rgba(255,255,255,1);}
+
+#g_main .g_main_list header {
+	background-color:rgba(190,190,190,1);
+	box-shadow:0px 2px 1px 0px rgba(120,120,120,1) inset,0px 2px 2px 0px rgba(255,255,255,0.8);
+    display:flex;
+    flex-wrap:nowrap;
+	height:80px;
+    margin-bottom:10px;
+}
+#g_main .g_main_list header .bt {
+	background-color:rgba(200,200,200,1);
+	background-position:center center;
+	border-right:1px solid rgba(0,0,0,0.3);
+	box-shadow:0px 2px 1px 0px rgba(0,0,0,0.5) inset;
+    color: #ffffff;
+    cursor:pointer;
+    padding: 20px 0px;
+    position:relative;
+    text-align:center;
+    text-indent:-9999px;
+    transition:all 0.1s ease-out;
+    width:100%;
+}
+#g_main .g_main_list header .bt.off {display:none;}
+#g_main .g_main_list header .bt:last-of-type {border-right:none;}
+#g_main .g_main_list header .bt.ui-droppable-hover {background-color:rgba(255,237,19,1);}
+
+#g_main .g_main_list section.main{
+    height:auto;
+    overflow-y:auto;
+    margin:0px 10px;
+}
+#g_main .g_main_list section.main:before {
+	border-radius:5px;
+	content:'';
+	left:0px;top:0px;
+	position:absolute;
+	transition:all 0.5s ease-out;
+}
+#g_main .g_main_list section.main.on:before {
+	background-color:rgba(150,150,0,0.5);
+	height:100%;
+	width:100%;
+	z-index:10;
+}
+#g_main .g_main_list section.main.on:after {
+	animation:ani_g_main_list 1.0s linear infinite;
+	bottom:0px;left:0px;right:0px;top:0px;
+	content:'DROP to APPEND';
+	color:#ffffff;
+	font-size:300%;
+	font-weight:bold;
+	height:1em;
+	margin:auto;
+	position:absolute;
+	text-align:center;
+	z-index:101;
+}
+#g_main .g_main_list section.main.on.type_sys:before {
+	background-color:rgba(150,0,150,0.5);
+}
+#g_main .g_main_list section.main.on.type_sys:after {
+	content:'CAN\'T DROP.';
+}
+@keyframes ani_g_main_list {
+	0%{opacity:0.5;}
+	50%{opacity:1;}
+	100%{opacity:0.5;}
+}
+#g_main .g_main_list section.main .main_inner {
+	min-height:100%;
+	min-width:400px;
+}
+#g_main .g_main_list .tp_lists{
+	margin-bottom:20px;
+    width:100%;
+	z-index:1;
+}
+#g_main .g_main_list .tp_lists.on.drop:before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: rgba(255,0,0,0.3);
+    top: 0px;
+}
+#g_main .g_main_list .tp_lists:last-of-type{margin-bottom:0px;}
+#g_main .g_main_list .tp_lists tr {}
+#g_main .g_main_list .tp_lists th {
+	border-bottom:1px solid rgba(0,0,0,1);
+    padding:10px;
+	position:relative;
+}
+#g_main .g_main_list .tp_lists th:after {
+	clear:both;
+	display:table;
+	content:'';
+}
+#g_main .g_main_list .tp_lists th div.template {
+	float:left;
+	overflow:hidden;
+	padding-right:2em;
+	position:relative;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+#g_main .g_main_list .tp_lists th section.tab_bts{float:left;}
+#g_main .g_main_list .tp_lists th .bt {
+    background-color:rgba(255,255,255,0.9);
+	background-position:center center;
+    border-radius:2px;
+    cursor:pointer;
+    display:inline-block;
+    height:28px;
+	line-height:28px;
+    margin:auto;
+	padding:0px;
+    position:relative;
+	vertical-align:middle;
+	width:28px;
+}
+#g_main .g_main_list .tp_lists.type_arc th .bt {
+	background-position:-4px center;
+	padding-right:5px;
+	text-align:right;
+	width:50px;
+}
+
+#g_main .g_main_list .tp_lists td {
+	border-bottom: 1px dotted #cccccc;
+    position:relative;
+	width:100%;
+	z-index:1;
+}
+#g_main .g_main_list .tp_lists td:after {clear:both;content:'';display:table;}
+#g_main .g_main_list .tp_lists td.on{overflow:hidden;}
+#g_main .g_main_list .tp_lists td.on:before{
+	background-color:rgba(0,0,0,0.3);
+	content:'';
+	height:100%;
+	position:absolute;
+	width:100%;
+	z-index:2;
+}
+#g_main .g_main_list .tp_lists td.on:after{
+	background: linear-gradient(to right, rgba(255,255,255,0) 0%,rgba(255,255,255,0.7) 50%,rgba(255,255,255,0) 100%);
+	content:'';
+	height:100%;
+	position:absolute;
+	width:100%;
+	z-index:2;
+}
+#g_main .g_main_list .tp_lists:not(.type_sys) td {cursor:pointer;}
+#g_main .g_main_list .tp_lists td > div {
+	background-color:rgba(255,255,255,1);
+	padding: 10px 5px;
+	position:relative;
+}
+#g_main .g_main_list .tp_lists td var{display:none;}
+#g_main .g_main_list .tp_lists td div.template {
+	float:left;
+    overflow: hidden;
+	padding-left:1em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	width:calc(100% - 30px);
+}
+#g_main .g_main_list .tp_lists td div.hb {
+	float:right;
+	width:30px;
+}
+
+#g_main .g_main_list .tp_lists .tp_list_empty > td {}
+#g_main .g_main_list .tp_lists .tp_list_empty > td:before {
+    content: '';
+    width: 100%;
+}
+#g_main .g_main_list .tp_lists tr.ui-selecting td > div{background-color:rgba(255,0,0,0.3);}
+#g_main .g_main_list .tp_lists tr.ui-selected td > div{background-color:rgba(255,0,0,0.3);}
+
+/*=========================================================
+//	g_main loading
+=========================================================*/
+.g_main_loading {
+    background-color: rgba(255,255,255,0.8);
+	border-radius:5px;
+    display:none;
+	left:0px;
+    height: 100%;
+    position: absolute;
+	top:0px;
+    width: 100%;
+    z-index: 1000;
+	}
+.g_main_loading.on {display:block;}
+.g_main_loading.on .g_main_loading_icon{
+	animation:ani_g_main_loading_opacity 0.1s linear infinite;
+	bottom:0px;
+	display:block;
+	height:200px;
+	left:0px;
+	margin:auto;
+	position:absolute;
+	right:0px;
+	top:0px;
+	width:200px;
+	}
+.g_main_loading.on .g_main_loading_rotate {
+	border:5px solid #0066ff;
+	border-radius:50%;
+	border-right-color:transparent;
+	height:30px;
+	margin:auto;
+	position:absolute;
+	top:0px;left:0px;right:0px;bottom:0px;
+	width:30px;
+	}
+.g_main_loading.on .g_main_loading_rotate.out {
+	animation:ani_g_main_loading_rotate_out 1s linear infinite;
+	height:50px;
+	width:50px;
+	}
+.g_main_loading.on .g_main_loading_rotate.in {animation:ani_g_main_loading_rotate_in 1s linear infinite;}
+.g_main_loading.on .g_main_loading_icon:after {
+    bottom:40px;
+    content:'Loading...';
+    color:#0066ff;
+    letter-spacing:3px;
+    font-weight:bold;
+    position:absolute;
+    text-align:center;
+    width:200px;
+	}
+@keyframes ani_g_main_loading_rotate_out {
+	0%{transform:rotate(0deg);}
+	50%{transform:rotate(180deg);}
+	100%{transform:rotate(360deg);}
+	}
+@keyframes ani_g_main_loading_rotate_in {
+	0%{transform:rotate(0deg);}
+	50%{transform:rotate(-180deg);}
+	100%{transform:rotate(-360deg);}
+	}
+@keyframes ani_g_main_loading_opacity {
+	0%{opacity:1;}
+	50%{opacity:0.5;}
+	100%{opacity:1;}
+	}
+
+.g_main_loading.on progress {
+	bottom:0px;
+	display:block;
+	position:absolute;
+	width:100%;
+}
+
+/*=========================================================
+//	box_lists Dragging
+=========================================================*/
+#g_drag_box_lists .box{
+    background-color:#ffffff;
+	box-shadow:1px 1px 0px 0px rgba(100,100,100,0.5);
+	cursor:pointer;
+    height:155px;
+    padding:5px;
+	position:relative;
+    width:160px;
+}
+#g_drag_box_lists .w_box.box{
+	background-color:#d3eacb;
+	border:2px solid #52A437;
+}
+#g_drag_box_lists .b_box.box{
+	background-color:#d5e7f3;
+	border:2px solid #0076BF;
+}
+
+#g_drag_box_lists .box .box_dropped{display:none;}
+#g_drag_box_lists .box.on .box_dropped{
+    background-color: rgba(255,0,0,0.5);
+	color: #ffffff;
+	display:block;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+	padding:10px;
+    position: absolute;
+    text-align: center;
+	width: 100%;
+}
+#g_drag_box_lists .box.on .box_dropped p{
+	display:block;
+	position:relative;
+	top:50%;
+	transform:translateY(-50%);
+}
+#g_drag_box_lists .box .box_img {
+    margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
+}
+#g_drag_box_lists .box_img img {border:1px solid #aaaaaa;}
+#g_drag_box_lists p.title {height: 37px; line-height:1.2em;overflow:hidden;text-overflow:ellipsis;width:100%;}
+#g_drag_box_lists .box:not(.on):hover{
+    box-shadow:0px 0px 3px 3px #ffff00;
+}
+#g_drag_box_lists .box.box-hover-class{
+    border:1px solid #999999;
+}
+#g_drag_box_lists .box .box_delete{
+	background-size:cover;
+	display:none;
+	height:30px;
+	position:absolute;
+	right:-10px;
+	top:-10px;
+	width:30px;
+	z-index:1;
+}
+/*=========================================================
+//	tp_lists Dragging
+=========================================================*/
+#g_drag_tp_lists{position:absolute;z-index:1000;}
+#g_drag_tp_lists tr{}
+#g_drag_tp_lists tr td {
+	border-bottom: 1px solid #ffffff;
+    position:relative;
+	width:100%;
+	z-index:1;
+}
+#g_drag_tp_lists tr:last-of-type td{border-bottom:none;}
+#g_drag_tp_lists trvtd:after {clear:both;content:'';display:table;}
+
+#g_drag_tp_lists tr td > div {
+	background-color:rgba(255,0,0,0.5);
+	padding:5px 5px;
+	position:relative;
+}
+#g_drag_tp_lists tr td var{display:none;}
+#g_drag_tp_lists tr td div.template {
+	float:left;
+    overflow: hidden;
+	padding-left:1em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	width:calc(100% - 30px);
+}
+#g_drag_tp_lists tr td div.hb {
+	float:right;
+	width:30px;
+}
+
+
+/*=========================================================
+//	g_footer
+=========================================================*/
+section#g_footer {
+	bottom: 0px;
+	box-shadow: 1px 1px 0px rgba(255,255,255,0.5) inset;
+    border-top: 1px solid rgba(0,0,0,0.3);
+	color: rgba(0,0,0,0.4);
+	line-height:1.5em;
+    padding: 10px;
+	position: absolute;
+    right: 0px;
+	text-align: right;
+    text-shadow: 0px 1px 0px rgba(255,255,255,0.3);
+	width: 100%;
+}
+
+/*=========================================================
+//	Image(Base64)
+=========================================================*/
+.icon_viewsite{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA10lEQVRYR+2WwQ2DMAxFYYNuAp2gbE5HKJO0GxR/iYNpSeJE/uaCJZ9i8V4SZKfvTo7+ZH53CXicwEuucTBeJWrvujZaAOwd00Mgt/mbLM6SoyoKE9DwRV1TiMAvfBKB93YKdIEj+Efg3wiBFBxsukAOThcowakCFjhNwAqnCNTAIYA2jNBNqXka1sKT3bKlFbvB/waDYaK5wmsF3OE1AhS4VYAGtwhQ4SUBOjwnEAJPCYTBUwJPWXhI4hk1SeIxQYujTggBnAIdXvoJabvWH26ZBa5il8AKH7RIIYAvIWcAAAAASUVORK5CYII=) no-repeat center;
+}
+.icon_arrow{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAtUlEQVRYR+2V4QlAABCF2cAm2IBNbMAoTGAURmATI3hXlB/kunclderlj3pfX3cnTT5+0o/7kwAIA2HgtwYy3I8WGZCNuSVWAw1KR2RBagbCCiAGZiRnIawAYt0FggFwgWABaAgPAArCC+AOotSspzfAhNICWY/3K4MXgGzEtbzS3gYPAHO56GEBqHIWgC5nAFzKGYDzZyTTrh64u5WwzoAY6JBeO+1P+2gFeN1v7QcBEAbCwA4JtCwh91W39QAAAABJRU5ErkJggg==) no-repeat center;
+}
+.icon_dup{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAw0lEQVRYR2NkGGDAOMD2M4w6YDQERkOAmBBwAGbV+UCsQGaWfQDUlwjEB7DpJ8YBIAPkybQcpg1khiK5DvgP1UiMY7HZgVc/MYYOegdcAHob5EhDHNFE8xAgFEKjDqB6CIDiXJ9AtgSpgaWJAXHARaADDKCOpLoD0D0/mggHPARACQ4EYHFOUhQNi6KYUEVJcS74ALSBn5AtBOQfAuUVyK2OHYAaFwAxuW0CkOUJQHyAXAdQ6Hn82olJhKMOGA0BmoYAAMvJMyE0Q5uUAAAAAElFTkSuQmCC) no-repeat center;
+}
+.icon_download{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVRYR+2VQQ6AIAwE4Wc+xZ8ZX6qQ6AG0dLcQiUk5N51hQ5YYJp84mR8sAociTe2khi+wC3gCnoAn4Al8lsCaqncb9FntaU/e9zjaXzBCQoRnG00gz/RINOGogFVChTMCrAQEZwVQCRhuEdAkKLhVQJKg4T0CtYQJ3itwSyxSySAl9tYDddUiXdFiNfe5wC8SQN4SM1NcGkmAWY7MukCRwAlj+ishQC+NhAAAAABJRU5ErkJggg==) no-repeat center;
+}
+.icon_rebuild{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB4klEQVRYR9VXi1HDMAxNN4AJCBMUJgAmACZomAA2IEwATEDZADYoEwAT0BFgAnjvsDjH8UdK0t7hO13TVE96lmRZnVW2VUP9FHIG2YEcOPgbPteQJ8iLe1ZZnqm0qoqOryGNUv8OejeQz5K+hgCd3rodl+z5v9P5OWSVA5UItG7nFseh7gVeLFMGcgS48weF50PosAZYD6wN4vYCnOj0zKUI1ND8UDinSmicxckaWHh4pmMf0quJFAFWM6vdsoi5h6wciGH3SbAo29BgjABD+WrxHOhKzhkJpkbSEY1CjABZ8siNWScuElf45AmS1SvIGAGG8GiMd2CfISzIMJqPeNf4tmMEvkc6F7jY9u2xSx5viwBPB5dfT2t852n4W5uMQCqQHZ/bJqBKwRRFmNq9FGc2BexilxMVYmhGdQzHNqIc91382GnHqVa8iTSwTbMxddYUl5EmW19QqsPdEzjFdawhIK25p1saSJZA+Deaxlmx8EqNKDTQ4IVmMAlxDDuxvKaTqxQBAQ4hkZyCrBEQfUs6osNHLAzaCAzJvQrzrwhwvJqrtvU7isl1nIVYImAh8A6v8rdtMgLKzdvULBGwWVZqWwlw1OaFEpua2Xh4lVOKf0qFn5WA4Go8tBC26UGOxdAP8p5TIUvh5zYAAAAASUVORK5CYII=) no-repeat center;
+}
+.icon_delete{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR2NkIB04ALXMB2IFHFofAMUTgfgAMUYzEqMITQ3IAnkC+kBqFIkxG58DCPmUGPOR1WANGXwOIMan5DgCJWTIiQJSLcWrflA74D9VvYowDMXT+EJg0DiAWtEE8xDJITBoHHABGI0gXxiipQ1ixSkOAawGQB0FchN6SKGrH3XAaAiMhsBoCIyGwGgIjIbA0A8BUMMDBAywNEiIEac4BChtJA89B3wAepmfUm+j6X8I5CsgixHqnC4AKibUEybWjSDLE4D4ALIGAPNAdiGxF4NxAAAAAElFTkSuQmCC) no-repeat center;
+}
+.icon_close{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA/0lEQVRYR+2V4Q3CIBCF2w0coU6gbqCT6wg6gY7gCN5LuARbyr0DTGOCCX8o3vt4x4Nx2Pg3bqw/dIDuQHfgrxw4yp3xkvEm746drJtk3HPrWQdQ6BmKXQgIiF9lAHofwJMcLAD+jJ0cCIhY/BEgVk3wAKDwzYCYi58ttzwA2EUOwi2Ogl6ANQjMa89hu7lz7UkJQAoCczhwLvFSBxQ+bgfm3OItANR2TQkT0a9E1LQg7jmKMhFdxLEEIHXaUdiK6EK8pAW5qDH3RJUDTM7dEJ4W6FVsnfY5xCnpfZhkASZZj8fIEk9FtNljtOlznHOx6hvbgiqRFmegA3QHfubAB1EWSiFDKJTHAAAAAElFTkSuQmCC) no-repeat center;
+}
+.icon_close_alt{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABeElEQVR42tVXjdFEMBDVAR3QgXRACdcBHSiBDqID18npgA7ogA7yZW8SQ4Ykm9zPd2/mjRnCe8nuJisIfgyEk3I+OAdOJjiIe1SMeSkizppz2QmauIh3vHHjnBDCKifxDSe0HsIq0atxf6G4ZPeNmatsbGLO3sybLtsvEy5NU2uRMAx146crA83VB6uqYoC6rq3Eh2F4jo/jGBWK9eqjeZ4ziaIorMThatgnDshNMyvLUmtCFY+iyLRaBJ35MhTLshxi7CDOhOaG3jbBuq47mHAUZ0Jzw4gppb0JR3F5gG1A1TIISWFHcUk3A/tllwbgno+B0UUcrhAGAIQFKT6ik/As4QghriZ6VBnqsn1vAkrV0kCrtlpO4rYblWkj0m7FtqW2N5FlmU58tT6MkiRBlRql1CYUzdVxPJ+9ADHG1DmM1zyf/21DYuwLPtGSvbMpvWM74+YbMz/LidlDePb5MVFXY0UIrz6zNv2ctmIfH5WDpRfPSPBL+ANgzoz/ceVnAAAAAABJRU5ErkJggg==) no-repeat center;
+}
+.icon_plus{
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAw0lEQVRYR2NkGGDAOMD2M4w6YDQERkOAmBBwAGbV+UCsQGaWfQDUlwjEB7DpJ8YBIAPkybQcpg1khiK5DvgP1UiMY7HZgVc/MYYOegdcAHob5EhDHNFE8xAgFEKjDqB6CIDiXJ9AtgSpgaWJAXHARaADDKCOpLoD0D0/mggHPARACQ4EYHFOUhQNi6KYUEVJcS74ALSBn5AtBOQfAuUVyK2OHYAaFwAxuW0CkOUJQHyAXAdQ6Hn82olJhKMOGA0BmoYAAMvJMyE0Q5uUAAAAAElFTkSuQmCC) no-repeat center;
+}
+
+</style>
+<script>
+"use strict";
+//=========================================================
+//	DataApi Program
+//=========================================================
+var MT_DATA_API = '';
+
+(function($, window, document, undefined) {
+const _G_CONSOLE_LOG_LEVEL=1;
+
+var _consoleLog=function(_str){
+	if(_G_CONSOLE_LOG_LEVEL===0){return;}
+	console.log(_str);
+}
+
+$.dataapi={
+	_LIST_SITES:{},
+	_LIST_TEMPLATES:{
+  "18": {
+    "items": [
+      {
+        "id": "1973",
+        "createdBy": {
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "displayName": "TakahashiMasaya"
+        },
+        "modifiedDate": "2016-10-28T08:34:42+00:00",
+        "text": "<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <meta name=\"generator\" content=\"<$mt:ProductName version=\"1\"$>\">\n    <title>Previewing your Comment - <$mt:BlogName encode_html=\"1\"$></title>\n    <$mt:Include module=\"HTML Head\"$>\n    <script type=\"text/javascript\">\n      var user = <$mt:UserSessionState$>;\n      var is_preview = true;\n    \n    <script src=\"<$mt:Link template=\"javascript\"$>\">\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <ul class=\"breadcrumb breadcrumb-list\">\n              <li class=\"breadcrumb-list-item\"><a href=\"<$mt:BlogURL encode_html=\"1\"$>\">Home</a></li>\n              <li class=\"breadcrumb-list-item\"><$mt:EntryTitle$></li>\n            </ul>\n            <div id=\"comment-preview-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2 class=\"title\">Previewing your Comment</h2>\n                <article id=\"comment-<$mt:CommentID$>\" class=\"comment<mt:IfCommentParent> comment-reply</mt:IfCommentParent><mt:IfCommenterIsEntryAuthor> entry-author-comment</mt:IfCommenterIsEntryAuthor>\">\n                  <header>\n                    <h3><mt:IfCommentParent><$mt:CommentAuthorLink$> replied to <a href=\"<mt:CommentParent><$mt:CommentLink$></mt:CommentParent>\">comment from <mt:CommentParent><$mt:CommentAuthor$></mt:CommentParent></a><mt:Else><$mt:CommentAuthorLink$></mt:IfCommentParent></h3>\n                    <a href=\"<$mt:CommentLink$>\"><time datetime=\"<$mt:CommentDate format_name=\"iso8601\"$>\"><$mt:CommentDate$></time></a>\n                  </header>\n                  <$mt:CommentBody$>\n                </article>\n                <$mt:Include module=\"Comment Form\"$>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "customFields": [],
+        "name": "Comment Preview",
+        "blog": {
+          "id": "18"
+        },
+        "linkToFile": "",
+        "createdDate": "2016-10-28T08:34:42+00:00",
+        "updatable": true,
+        "type": "comment_preview"
+      },
+      {
+        "linkToFile": "",
+        "blog": {
+          "id": "18"
+        },
+        "type": "comment_response",
+        "updatable": true,
+        "createdDate": "2016-10-28T08:34:41+00:00",
+        "modifiedDate": "2016-10-28T08:34:41+00:00",
+        "id": "1947",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "name": "Comment Response",
+        "customFields": [],
+        "text": "<mt:If name=\"comment_confirmation\">\n  <$mt:Var name=\"page_title\" value=\"Confirmation...\"$>\n  <$mt:Var name=\"message\" value=\"<p class=\"message success\">Your comment has been submitted!</p>\"$>\n<mt:Else name=\"comment_pending\">\n  <$mt:Var name=\"page_title\" value=\"Thank you for commenting.\"$>\n  <$mt:Var name=\"message\" value=\"<p class=\"message success\">Your comment has been received and held for review by a blog administrator.</p>\"$>\n<mt:Else name=\"comment_error\">\n  <$mt:Var name=\"page_title\" value=\"Comment Submission Error\"$>\n  <mt:SetVarBlock name=\"message\"><p class=\"message error\">Your comment submission failed for the following reasons: <$mt:ErrorMessage encode_html=\"1\"$></p></mt:SetVarBlock>\n</mt:If>\n<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <meta name=\"description\" content=\"<$mt:EntryExcerpt remove_html=\"1\" encode_html=\"1\"$>\">\n    <title><$mt:BlogName encode_html=\"1\"$> - <$mt:Var name=\"page_title\" encode_html=\"1\"$></title>\n    <$mt:Include module=\"HTML Head\"$>\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <ul class=\"breadcrumb breadcrumb-list\">\n              <li class=\"breadcrumb-list-item\"><a href=\"<$mt:BlogURL encode_html=\"1\"$>\">Home</a></li>\n              <li class=\"breadcrumb-list-item\"><$mt:EntryTitle$></li>\n            </ul>\n            <div id=\"comment-response-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2 class=\"title\"><$mt:Var name=\"page_title\"$></h2>\n                <$mt:Var name=\"message\"$>\n                <p>Return to the <a href=\"<mt:If name=\"comment_error\">javascript:history.back()<mt:Else><$mt:EntryLink$></mt:If>\">original entry</a>.</p>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n"
+      },
+      {
+        "modifiedDate": "2016-10-28T08:34:42+00:00",
+        "id": "1960",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "customFields": [],
+        "name": "Dynamic Error",
+        "text": "<!DOCTYPE html>\n<html lang=\"<$mt:BlogLanguage$>\">\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <title><$mt:BlogName encode_html=\"1\"$>: Page Not Found</title>\n    <$mt:Include module=\"HTML Head\"$>\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <div id=\"dynamic-error-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2>Page Not Found</h2>\n                <pre><$mt:ErrorMessage$></pre>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <$mt:Include module=\"Banner Footer\"$>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "linkToFile": "",
+        "blog": {
+          "id": "18"
+        },
+        "type": "dynamic_error",
+        "createdDate": "2016-10-28T08:34:42+00:00",
+        "updatable": true
+      },
+      {
+        "text": "<mt:ignore>=====================================\nblogid:19→01_blog DigestMovie\nblogid:20→02_blog DigestPost\n=====================================</mt:ignore>\n\n<$mt:setvar name=\"_HASH\" function=\"undef\"$>\n<mt:multiblog blog_ids=\"19\">\n<mt:categories show_empty=\"1\">\n<mt:setvarblock name=\"_cat_name\">cat_<$mt:categorybasename$></mt:setvarblock>\n<$mt:categorylabel setvar=\"_cat_lb\"$>\n<$mt:categorydescription setvar=\"_cat_dc\"$>\n<mt:if name=\"_cat_dc\" ne=\"\">\n<$mt:setvar name=\"_d\" function=\"undef\"$>\n<$mt:setvar name=\"_d\" key=\"title\" value=\"$_cat_lb\"$>\n<$mt:setvar name=\"_d\" key=\"body\" value=\"$_cat_dc\"$>\n<$mt:setvar name=\"_digestmovie\" key=\"$_cat_name\" value=\"$_d\"$>\n</mt:if>\n</mt:categories>\n<$mt:setvar name=\"_HASH\" key=\"digestmovie\" value=\"$_digestmovie\"$>\n</mt:multiblog>\n\n<mt:multiblog blog_ids=\"20\">\n<$mt:setvar name=\"_digest\" function=\"undef\"$>\n<mt:categories>\n<mt:setvarblock name=\"_cat_name\">cat_<$mt:categorybasename$></mt:setvarblock>\n<mt:entries lastn=\"1\">\n<$mt:setvar name=\"_d\" function=\"undef\"$>\n<$mt:entrytitle setvar=\"_et\"$>\n<$mt:entrybody setvar=\"_eb\"$>\n<$mt:setvar name=\"_d\" key=\"title\" value=\"$_et\"$>\n<$mt:setvar name=\"_d\" key=\"body\" value=\"$_eb\"$>\n<$mt:setvar name=\"_digest\" key=\"$_cat_name\" value=\"$_d\"$>\n</mt:entries>\n</mt:categories>\n<$mt:setvar name=\"_HASH\" key=\"digest\" value=\"$_digest\"$>\n</mt:multiblog>\n\n<$mt:var name=\"_HASH\" to_json=\"1\"$>",
+        "name": "PCSP_M_JSON_DATA",
+        "customFields": [],
+        "createdBy": {
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "id": "1",
+          "displayName": "TakahashiMasaya"
+        },
+        "id": "2319",
+        "modifiedDate": "2016-12-06T01:38:46+00:00",
+        "modifiedBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "updatable": true,
+        "createdDate": "2016-12-05T14:37:14+00:00",
+        "type": "custom",
+        "blog": {
+          "id": "18"
+        },
+        "linkToFile": ""
+      },
+      {
+        "text": "<!DOCTYPE html>\n<html>\n    <head>\n        <title><$mt:ImageURL$></title>\n    </head>\n    <body id=\"uploaded-image-popup\" class=\"popup\" style=\"margin: 0;padding: 0;\">\n        <img src=\"<$mt:ImageURL$>\" width=\"<$mt:ImageWidth$>\" height=\"<$mt:ImageHeight$>\" alt=\"<$mt:ImageURL$>\" style=\"margin: 0;padding: 0;border: 0;\" />\n    </body>\n</html>\n",
+        "name": "Popup Image",
+        "customFields": [],
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "id": "1969",
+        "modifiedDate": "2016-10-28T08:34:42+00:00",
+        "updatable": true,
+        "createdDate": "2016-10-28T08:34:42+00:00",
+        "type": "popup_image",
+        "blog": {
+          "id": "18"
+        },
+        "linkToFile": ""
+      },
+      {
+        "type": "search_results",
+        "createdDate": "2016-10-28T08:34:41+00:00",
+        "updatable": true,
+        "linkToFile": "",
+        "blog": {
+          "id": "18"
+        },
+        "customFields": [],
+        "name": "Search Results",
+        "text": "<!DOCTYPE html>\n<html lang=\"<$mt:BlogLanguage$>\">\n  <head>\n    <script type=\"text/javascript\">\n      var user = <$mt:UserSessionState$>;\n    \n    <meta charset=\"<$mt:PublishCharset$>\">\n    <title><$mt:BlogName encode_html=\"1\"$> - Search Results</title>\n    <$mt:Include module=\"HTML Head\"$>\n    <script src=\"<$mt:Link template=\"javascript\"$>\">\n    <script>\n<mt:IfMoreResults>\n      function getResults(page) {\n        page = parseInt(page);\n        if (timer) window.clearTimeout(timer);\n        var xh = mtGetXmlHttp();\n        if (!xh) return false;\n        var res = results[page];\n        if (!res) return;\n        var url = res['next_url'];\n        if (!url) return;\n\n        xh.open('GET', url + '&format=js', true);\n        xh.onreadystatechange = function() {\n          if ( xh.readyState == 4 ) {\n            if ( xh.status && ( xh.status != 200 ) ) {\n              // error - ignore\n            } else {\n              try {\n                var page_results = eval(\"(\" + xh.responseText + \")\");\n                if ( page_results['error'] == null )\n                  results[page + 1] = page_results['result'];\n              } catch (e) {\n              }\n            }\n          }\n      };\n      xh.send(null);\n    }\n\n    function swapContent(direction) {\n      if ( direction == undefined ) direction = 1;\n      var page_span = document.getElementById('current-page');\n      if (!page_span) return true;\n      var next_page = direction + parseInt(page_span.innerHTML);\n      var res = results[next_page];\n      if (!res) return true;\n      var content = res['content'];\n      if (!content) return true;\n      var div = document.getElementById('search-results-main');\n      if (!div) return true;\n      div.innerHTML = content;\n      timer = window.setTimeout(\"getResults(\" + next_page + \")\", 1*1000);\n      window.scroll(0, 0);\n      return false;\n    }\n<mt:Else>\n  <mt:IfPreviousResults>\n    function swapContent(direction) {\n      return true;\n    }\n  </mt:IfPreviousResults>\n</mt:IfMoreResults>\n    \n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <div id=\"search-results-main\" class=\"main\" role=\"main\">\n<mt:SetVarTemplate id=\"search_results\" name=\"search_results\">\n  <mt:SearchResults>\n    <mt:SearchResultsHeader>\n              <section id=\"search-results\">\n                <span id=\"current-page\" class=\"hidden\"><$mt:CurrentPage$></span>\n                <h1 class=\"title\">\n      <MTIfStatic><mt:IfStraightSearch>\n                  Results matching &ldquo;<$mt:SearchString$>&rdquo;\n      </mt:IfStraightSearch></MTIfStatic>\n      <mt:IfTagSearch>\n                  Results tagged &ldquo;<$mt:SearchString$>&rdquo;\n      </mt:IfTagSearch>\n                </h1>\n    </mt:SearchResultsHeader>\n\n                <$mt:Include module=\"Entry Summary\" hide_counts=\"1\"$>\n\n    <mt:SearchResultsFooter>\n              </section>\n              <nav class=\"pagination\">\n                <ul>\n      <mt:IfMoreResults>\n                  <li><a rel=\"prev\" href=\"<$mt:NextLink encode_html=\"1\"$>\" onclick=\"return swapContent();\">Older entries</a></li>\n      </mt:IfMoreResults>\n      <mt:IfPreviousResults>\n                  <li><a rel=\"next\" href=\"<$mt:PreviousLink encode_html=\"1\"$>\" onclick=\"return swapContent(-1);\">Newer entries</a></li>\n      </mt:IfPreviousResults>\n                </ul>\n              </nav>\n    </mt:SearchResultsFooter>\n  </mt:SearchResults>\n</mt:SetVarTemplate>\n\n<$mt:Var name=\"search_results\"$>\n\n<mt:NoSearchResults>\n              <section>\n                <h1 class=\"search-results-header\">\n  <MTIfStatic><mt:IfStraightSearch>\n                  Results matching &ldquo;<$mt:SearchString$>&rdquo;\n  </mt:IfStraightSearch></MTIfStatic>\n  <mt:IfTagSearch>\n                  Results tagged &ldquo;<$mt:SearchString$>&rdquo;\n  </mt:IfTagSearch>\n                </h1>\n                <p>No results found for &ldquo;<$mt:SearchString$>&rdquo;.</p>\n              </section>\n</mt:NoSearchResults>\n\n<mt:NoSearch>\n              <section>\n                <h1 class=\"search-results-header\">Instructions</h1>\n                <p>By default, this search engine looks for all of the specified words in any order. To search for an exact phrase, enclose the phrase in quotes:</p>\n                <pre><code>\"movable type\"</code></pre>\n                <p>The search engine also supports the AND, OR, and NOT boolean operators:</p>\n                <pre><code>personal OR publishing</code></pre>\n                <pre><code>publishing NOT personal</code></pre>\n              </section>\n</mt:NoSearch>\n\n<mt:Ignore><!-- Used with the ajax search capability of the new search class --></mt:Ignore>\n<mt:IfMoreResults>\n              <script type=\"text/javascript\">\n                var div = document.getElementById('search-results');\n                var results = {\n                  '<$mt:CurrentPage$>': {\n                    'content': div.innerHTML,\n                    'next_url': '<$mt:NextLink$>'\n                  }\n                };\n                var timer = window.setTimeout(\"getResults(\" + <$mt:CurrentPage$> + \")\", 1*1000);\n              \n</mt:IfMoreResults>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "modifiedDate": "2016-10-28T08:34:41+00:00",
+        "createdBy": {
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "id": "1",
+          "displayName": "TakahashiMasaya"
+        },
+        "id": "1943"
+      }
+    ],
+    "totalResults": "6"
+  },
+  "19": {
+    "items": [
+      {
+        "type": "comment_preview",
+        "customFields": [],
+        "name": "Comment Preview",
+        "id": "2010",
+        "text": "<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <meta name=\"generator\" content=\"<$mt:ProductName version=\"1\"$>\">\n    <title>Previewing your Comment - <$mt:BlogName encode_html=\"1\"$></title>\n    <$mt:Include module=\"HTML Head\"$>\n    <script type=\"text/javascript\">\n      var user = <$mt:UserSessionState$>;\n      var is_preview = true;\n    \n    <script src=\"<$mt:Link template=\"javascript\"$>\">\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <ul class=\"breadcrumb breadcrumb-list\">\n              <li class=\"breadcrumb-list-item\"><a href=\"<$mt:BlogURL encode_html=\"1\"$>\">Home</a></li>\n              <li class=\"breadcrumb-list-item\"><$mt:EntryTitle$></li>\n            </ul>\n            <div id=\"comment-preview-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2 class=\"title\">Previewing your Comment</h2>\n                <article id=\"comment-<$mt:CommentID$>\" class=\"comment<mt:IfCommentParent> comment-reply</mt:IfCommentParent><mt:IfCommenterIsEntryAuthor> entry-author-comment</mt:IfCommenterIsEntryAuthor>\">\n                  <header>\n                    <h3><mt:IfCommentParent><$mt:CommentAuthorLink$> replied to <a href=\"<mt:CommentParent><$mt:CommentLink$></mt:CommentParent>\">comment from <mt:CommentParent><$mt:CommentAuthor$></mt:CommentParent></a><mt:Else><$mt:CommentAuthorLink$></mt:IfCommentParent></h3>\n                    <a href=\"<$mt:CommentLink$>\"><time datetime=\"<$mt:CommentDate format_name=\"iso8601\"$>\"><$mt:CommentDate$></time></a>\n                  </header>\n                  <$mt:CommentBody$>\n                </article>\n                <$mt:Include module=\"Comment Form\"$>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "linkToFile": "",
+        "modifiedDate": "2016-10-28T08:35:18+00:00",
+        "blog": {
+          "id": "19"
+        },
+        "updatable": true,
+        "createdDate": "2016-10-28T08:35:18+00:00",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        }
+      },
+      {
+        "type": "comment_response",
+        "customFields": [],
+        "name": "Comment Response",
+        "id": "1984",
+        "text": "<mt:If name=\"comment_confirmation\">\n  <$mt:Var name=\"page_title\" value=\"Confirmation...\"$>\n  <$mt:Var name=\"message\" value=\"<p class=\"message success\">Your comment has been submitted!</p>\"$>\n<mt:Else name=\"comment_pending\">\n  <$mt:Var name=\"page_title\" value=\"Thank you for commenting.\"$>\n  <$mt:Var name=\"message\" value=\"<p class=\"message success\">Your comment has been received and held for review by a blog administrator.</p>\"$>\n<mt:Else name=\"comment_error\">\n  <$mt:Var name=\"page_title\" value=\"Comment Submission Error\"$>\n  <mt:SetVarBlock name=\"message\"><p class=\"message error\">Your comment submission failed for the following reasons: <$mt:ErrorMessage encode_html=\"1\"$></p></mt:SetVarBlock>\n</mt:If>\n<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <meta name=\"description\" content=\"<$mt:EntryExcerpt remove_html=\"1\" encode_html=\"1\"$>\">\n    <title><$mt:BlogName encode_html=\"1\"$> - <$mt:Var name=\"page_title\" encode_html=\"1\"$></title>\n    <$mt:Include module=\"HTML Head\"$>\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <ul class=\"breadcrumb breadcrumb-list\">\n              <li class=\"breadcrumb-list-item\"><a href=\"<$mt:BlogURL encode_html=\"1\"$>\">Home</a></li>\n              <li class=\"breadcrumb-list-item\"><$mt:EntryTitle$></li>\n            </ul>\n            <div id=\"comment-response-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2 class=\"title\"><$mt:Var name=\"page_title\"$></h2>\n                <$mt:Var name=\"message\"$>\n                <p>Return to the <a href=\"<mt:If name=\"comment_error\">javascript:history.back()<mt:Else><$mt:EntryLink$></mt:If>\">original entry</a>.</p>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "linkToFile": "",
+        "modifiedDate": "2016-10-28T08:35:17+00:00",
+        "blog": {
+          "id": "19"
+        },
+        "updatable": true,
+        "createdDate": "2016-10-28T08:35:17+00:00",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        }
+      },
+      {
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "createdDate": "2016-10-28T08:35:17+00:00",
+        "blog": {
+          "id": "19"
+        },
+        "updatable": true,
+        "modifiedDate": "2016-10-28T08:35:17+00:00",
+        "text": "<!DOCTYPE html>\n<html lang=\"<$mt:BlogLanguage$>\">\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <title><$mt:BlogName encode_html=\"1\"$>: Page Not Found</title>\n    <$mt:Include module=\"HTML Head\"$>\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <div id=\"dynamic-error-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2>Page Not Found</h2>\n                <pre><$mt:ErrorMessage$></pre>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <$mt:Include module=\"Banner Footer\"$>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "linkToFile": "",
+        "name": "Dynamic Error",
+        "id": "1982",
+        "type": "dynamic_error",
+        "customFields": []
+      },
+      {
+        "customFields": [],
+        "type": "index",
+        "id": "2318",
+        "name": "PCSP_I_JSON_DATA",
+        "templateType": "",
+        "linkToFile": "",
+        "text": "<$mt:include module=\"PCSP_M_JSON_DATA\" parent=\"1\"$>",
+        "outputFile": "../test.json",
+        "modifiedDate": "2016-12-05T14:39:02+00:00",
+        "modifiedBy": {
+          "id": "1",
+          "displayName": "TakahashiMasaya",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "updatable": true,
+        "buildType": "Static",
+        "blog": {
+          "id": "19"
+        },
+        "createdBy": {
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "displayName": "TakahashiMasaya",
+          "id": "1"
+        },
+        "createdDate": "2016-12-05T11:51:42+00:00"
+      },
+      {
+        "createdBy": {
+          "id": "1",
+          "displayName": "TakahashiMasaya",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "createdDate": "2016-10-28T08:35:17+00:00",
+        "updatable": true,
+        "blog": {
+          "id": "19"
+        },
+        "modifiedDate": "2016-10-28T08:35:17+00:00",
+        "linkToFile": "",
+        "text": "<!DOCTYPE html>\n<html>\n    <head>\n        <title><$mt:ImageURL$></title>\n    </head>\n    <body id=\"uploaded-image-popup\" class=\"popup\" style=\"margin: 0;padding: 0;\">\n        <img src=\"<$mt:ImageURL$>\" width=\"<$mt:ImageWidth$>\" height=\"<$mt:ImageHeight$>\" alt=\"<$mt:ImageURL$>\" style=\"margin: 0;padding: 0;border: 0;\" />\n    </body>\n</html>\n",
+        "id": "1985",
+        "name": "Popup Image",
+        "customFields": [],
+        "type": "popup_image"
+      },
+      {
+        "blog": {
+          "id": "19"
+        },
+        "updatable": true,
+        "createdDate": "2016-10-28T08:35:18+00:00",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png"
+        },
+        "text": "<!DOCTYPE html>\n<html lang=\"<$mt:BlogLanguage$>\">\n  <head>\n    <script type=\"text/javascript\">\n      var user = <$mt:UserSessionState$>;\n    \n    <meta charset=\"<$mt:PublishCharset$>\">\n    <title><$mt:BlogName encode_html=\"1\"$> - Search Results</title>\n    <$mt:Include module=\"HTML Head\"$>\n    <script src=\"<$mt:Link template=\"javascript\"$>\">\n    <script>\n<mt:IfMoreResults>\n      function getResults(page) {\n        page = parseInt(page);\n        if (timer) window.clearTimeout(timer);\n        var xh = mtGetXmlHttp();\n        if (!xh) return false;\n        var res = results[page];\n        if (!res) return;\n        var url = res['next_url'];\n        if (!url) return;\n\n        xh.open('GET', url + '&format=js', true);\n        xh.onreadystatechange = function() {\n          if ( xh.readyState == 4 ) {\n            if ( xh.status && ( xh.status != 200 ) ) {\n              // error - ignore\n            } else {\n              try {\n                var page_results = eval(\"(\" + xh.responseText + \")\");\n                if ( page_results['error'] == null )\n                  results[page + 1] = page_results['result'];\n              } catch (e) {\n              }\n            }\n          }\n      };\n      xh.send(null);\n    }\n\n    function swapContent(direction) {\n      if ( direction == undefined ) direction = 1;\n      var page_span = document.getElementById('current-page');\n      if (!page_span) return true;\n      var next_page = direction + parseInt(page_span.innerHTML);\n      var res = results[next_page];\n      if (!res) return true;\n      var content = res['content'];\n      if (!content) return true;\n      var div = document.getElementById('search-results-main');\n      if (!div) return true;\n      div.innerHTML = content;\n      timer = window.setTimeout(\"getResults(\" + next_page + \")\", 1*1000);\n      window.scroll(0, 0);\n      return false;\n    }\n<mt:Else>\n  <mt:IfPreviousResults>\n    function swapContent(direction) {\n      return true;\n    }\n  </mt:IfPreviousResults>\n</mt:IfMoreResults>\n    \n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <div id=\"search-results-main\" class=\"main\" role=\"main\">\n<mt:SetVarTemplate id=\"search_results\" name=\"search_results\">\n  <mt:SearchResults>\n    <mt:SearchResultsHeader>\n              <section id=\"search-results\">\n                <span id=\"current-page\" class=\"hidden\"><$mt:CurrentPage$></span>\n                <h1 class=\"title\">\n      <MTIfStatic><mt:IfStraightSearch>\n                  Results matching &ldquo;<$mt:SearchString$>&rdquo;\n      </mt:IfStraightSearch></MTIfStatic>\n      <mt:IfTagSearch>\n                  Results tagged &ldquo;<$mt:SearchString$>&rdquo;\n      </mt:IfTagSearch>\n                </h1>\n    </mt:SearchResultsHeader>\n\n                <$mt:Include module=\"Entry Summary\" hide_counts=\"1\"$>\n\n    <mt:SearchResultsFooter>\n              </section>\n              <nav class=\"pagination\">\n                <ul>\n      <mt:IfMoreResults>\n                  <li><a rel=\"prev\" href=\"<$mt:NextLink encode_html=\"1\"$>\" onclick=\"return swapContent();\">Older entries</a></li>\n      </mt:IfMoreResults>\n      <mt:IfPreviousResults>\n                  <li><a rel=\"next\" href=\"<$mt:PreviousLink encode_html=\"1\"$>\" onclick=\"return swapContent(-1);\">Newer entries</a></li>\n      </mt:IfPreviousResults>\n                </ul>\n              </nav>\n    </mt:SearchResultsFooter>\n  </mt:SearchResults>\n</mt:SetVarTemplate>\n\n<$mt:Var name=\"search_results\"$>\n\n<mt:NoSearchResults>\n              <section>\n                <h1 class=\"search-results-header\">\n  <MTIfStatic><mt:IfStraightSearch>\n                  Results matching &ldquo;<$mt:SearchString$>&rdquo;\n  </mt:IfStraightSearch></MTIfStatic>\n  <mt:IfTagSearch>\n                  Results tagged &ldquo;<$mt:SearchString$>&rdquo;\n  </mt:IfTagSearch>\n                </h1>\n                <p>No results found for &ldquo;<$mt:SearchString$>&rdquo;.</p>\n              </section>\n</mt:NoSearchResults>\n\n<mt:NoSearch>\n              <section>\n                <h1 class=\"search-results-header\">Instructions</h1>\n                <p>By default, this search engine looks for all of the specified words in any order. To search for an exact phrase, enclose the phrase in quotes:</p>\n                <pre><code>\"movable type\"</code></pre>\n                <p>The search engine also supports the AND, OR, and NOT boolean operators:</p>\n                <pre><code>personal OR publishing</code></pre>\n                <pre><code>publishing NOT personal</code></pre>\n              </section>\n</mt:NoSearch>\n\n<mt:Ignore><!-- Used with the ajax search capability of the new search class --></mt:Ignore>\n<mt:IfMoreResults>\n              <script type=\"text/javascript\">\n                var div = document.getElementById('search-results');\n                var results = {\n                  '<$mt:CurrentPage$>': {\n                    'content': div.innerHTML,\n                    'next_url': '<$mt:NextLink$>'\n                  }\n                };\n                var timer = window.setTimeout(\"getResults(\" + <$mt:CurrentPage$> + \")\", 1*1000);\n              \n</mt:IfMoreResults>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "linkToFile": "",
+        "modifiedDate": "2016-10-28T08:35:18+00:00",
+        "type": "search_results",
+        "customFields": [],
+        "name": "Search Results",
+        "id": "2005"
+      }
+    ],
+    "totalResults": "6"
+  },
+  "20": {
+    "totalResults": "6",
+    "items": [
+      {
+        "updatable": true,
+        "customFields": [],
+        "name": "Comment Preview",
+        "linkToFile": "",
+        "createdBy": {
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "displayName": "TakahashiMasaya"
+        },
+        "id": "2019",
+        "text": "<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <meta name=\"generator\" content=\"<$mt:ProductName version=\"1\"$>\">\n    <title>Previewing your Comment - <$mt:BlogName encode_html=\"1\"$></title>\n    <$mt:Include module=\"HTML Head\"$>\n    <script type=\"text/javascript\">\n      var user = <$mt:UserSessionState$>;\n      var is_preview = true;\n    \n    <script src=\"<$mt:Link template=\"javascript\"$>\">\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <ul class=\"breadcrumb breadcrumb-list\">\n              <li class=\"breadcrumb-list-item\"><a href=\"<$mt:BlogURL encode_html=\"1\"$>\">Home</a></li>\n              <li class=\"breadcrumb-list-item\"><$mt:EntryTitle$></li>\n            </ul>\n            <div id=\"comment-preview-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2 class=\"title\">Previewing your Comment</h2>\n                <article id=\"comment-<$mt:CommentID$>\" class=\"comment<mt:IfCommentParent> comment-reply</mt:IfCommentParent><mt:IfCommenterIsEntryAuthor> entry-author-comment</mt:IfCommenterIsEntryAuthor>\">\n                  <header>\n                    <h3><mt:IfCommentParent><$mt:CommentAuthorLink$> replied to <a href=\"<mt:CommentParent><$mt:CommentLink$></mt:CommentParent>\">comment from <mt:CommentParent><$mt:CommentAuthor$></mt:CommentParent></a><mt:Else><$mt:CommentAuthorLink$></mt:IfCommentParent></h3>\n                    <a href=\"<$mt:CommentLink$>\"><time datetime=\"<$mt:CommentDate format_name=\"iso8601\"$>\"><$mt:CommentDate$></time></a>\n                  </header>\n                  <$mt:CommentBody$>\n                </article>\n                <$mt:Include module=\"Comment Form\"$>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "createdDate": "2016-10-28T08:36:21+00:00",
+        "modifiedDate": "2016-10-28T08:36:21+00:00",
+        "type": "comment_preview",
+        "blog": {
+          "id": "20"
+        }
+      },
+      {
+        "type": "comment_response",
+        "blog": {
+          "id": "20"
+        },
+        "modifiedDate": "2016-10-28T08:36:21+00:00",
+        "createdDate": "2016-10-28T08:36:21+00:00",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "id": "1"
+        },
+        "id": "2022",
+        "text": "<mt:If name=\"comment_confirmation\">\n  <$mt:Var name=\"page_title\" value=\"Confirmation...\"$>\n  <$mt:Var name=\"message\" value=\"<p class=\"message success\">Your comment has been submitted!</p>\"$>\n<mt:Else name=\"comment_pending\">\n  <$mt:Var name=\"page_title\" value=\"Thank you for commenting.\"$>\n  <$mt:Var name=\"message\" value=\"<p class=\"message success\">Your comment has been received and held for review by a blog administrator.</p>\"$>\n<mt:Else name=\"comment_error\">\n  <$mt:Var name=\"page_title\" value=\"Comment Submission Error\"$>\n  <mt:SetVarBlock name=\"message\"><p class=\"message error\">Your comment submission failed for the following reasons: <$mt:ErrorMessage encode_html=\"1\"$></p></mt:SetVarBlock>\n</mt:If>\n<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <meta name=\"description\" content=\"<$mt:EntryExcerpt remove_html=\"1\" encode_html=\"1\"$>\">\n    <title><$mt:BlogName encode_html=\"1\"$> - <$mt:Var name=\"page_title\" encode_html=\"1\"$></title>\n    <$mt:Include module=\"HTML Head\"$>\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <ul class=\"breadcrumb breadcrumb-list\">\n              <li class=\"breadcrumb-list-item\"><a href=\"<$mt:BlogURL encode_html=\"1\"$>\">Home</a></li>\n              <li class=\"breadcrumb-list-item\"><$mt:EntryTitle$></li>\n            </ul>\n            <div id=\"comment-response-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2 class=\"title\"><$mt:Var name=\"page_title\"$></h2>\n                <$mt:Var name=\"message\"$>\n                <p>Return to the <a href=\"<mt:If name=\"comment_error\">javascript:history.back()<mt:Else><$mt:EntryLink$></mt:If>\">original entry</a>.</p>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "name": "Comment Response",
+        "updatable": true,
+        "customFields": [],
+        "linkToFile": ""
+      },
+      {
+        "id": "2031",
+        "createdBy": {
+          "id": "1",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "displayName": "TakahashiMasaya"
+        },
+        "text": "<!DOCTYPE html>\n<html lang=\"<$mt:BlogLanguage$>\">\n  <head>\n    <meta charset=\"<$mt:PublishCharset$>\">\n    <title><$mt:BlogName encode_html=\"1\"$>: Page Not Found</title>\n    <$mt:Include module=\"HTML Head\"$>\n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <div id=\"dynamic-error-main\" class=\"main\" role=\"main\">\n              <section>\n                <h2>Page Not Found</h2>\n                <pre><$mt:ErrorMessage$></pre>\n              </section>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <$mt:Include module=\"Banner Footer\"$>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "customFields": [],
+        "updatable": true,
+        "name": "Dynamic Error",
+        "linkToFile": "",
+        "type": "dynamic_error",
+        "blog": {
+          "id": "20"
+        },
+        "modifiedDate": "2016-10-28T08:36:21+00:00",
+        "createdDate": "2016-10-28T08:36:21+00:00"
+      },
+      {
+        "createdDate": "2016-12-05T11:50:54+00:00",
+        "modifiedDate": "2016-12-05T14:44:33+00:00",
+        "modifiedBy": {
+          "displayName": "TakahashiMasaya",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "id": "1"
+        },
+        "templateType": "javascript",
+        "blog": {
+          "id": "20"
+        },
+        "type": "index",
+        "linkToFile": "",
+        "updatable": true,
+        "name": "PCSP_I_JSON_DATA",
+        "customFields": [],
+        "text": "<$mt:include module=\"PCSP_M_JSON_DATA\" parent=\"1\"$>",
+        "outputFile": "../test.json",
+        "buildType": "Static",
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "id": "1"
+        },
+        "id": "2317"
+      },
+      {
+        "updatable": true,
+        "customFields": [],
+        "name": "Popup Image",
+        "linkToFile": "",
+        "createdBy": {
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "displayName": "TakahashiMasaya",
+          "id": "1"
+        },
+        "id": "2040",
+        "text": "<!DOCTYPE html>\n<html>\n    <head>\n        <title><$mt:ImageURL$></title>\n    </head>\n    <body id=\"uploaded-image-popup\" class=\"popup\" style=\"margin: 0;padding: 0;\">\n        <img src=\"<$mt:ImageURL$>\" width=\"<$mt:ImageWidth$>\" height=\"<$mt:ImageHeight$>\" alt=\"<$mt:ImageURL$>\" style=\"margin: 0;padding: 0;border: 0;\" />\n    </body>\n</html>\n",
+        "modifiedDate": "2016-10-28T08:36:21+00:00",
+        "createdDate": "2016-10-28T08:36:21+00:00",
+        "type": "popup_image",
+        "blog": {
+          "id": "20"
+        }
+      },
+      {
+        "createdBy": {
+          "displayName": "TakahashiMasaya",
+          "userpicUrl": "/mt/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+          "id": "1"
+        },
+        "id": "2015",
+        "text": "<!DOCTYPE html>\n<html lang=\"<$mt:BlogLanguage$>\">\n  <head>\n    <script type=\"text/javascript\">\n      var user = <$mt:UserSessionState$>;\n    \n    <meta charset=\"<$mt:PublishCharset$>\">\n    <title><$mt:BlogName encode_html=\"1\"$> - Search Results</title>\n    <$mt:Include module=\"HTML Head\"$>\n    <script src=\"<$mt:Link template=\"javascript\"$>\">\n    <script>\n<mt:IfMoreResults>\n      function getResults(page) {\n        page = parseInt(page);\n        if (timer) window.clearTimeout(timer);\n        var xh = mtGetXmlHttp();\n        if (!xh) return false;\n        var res = results[page];\n        if (!res) return;\n        var url = res['next_url'];\n        if (!url) return;\n\n        xh.open('GET', url + '&format=js', true);\n        xh.onreadystatechange = function() {\n          if ( xh.readyState == 4 ) {\n            if ( xh.status && ( xh.status != 200 ) ) {\n              // error - ignore\n            } else {\n              try {\n                var page_results = eval(\"(\" + xh.responseText + \")\");\n                if ( page_results['error'] == null )\n                  results[page + 1] = page_results['result'];\n              } catch (e) {\n              }\n            }\n          }\n      };\n      xh.send(null);\n    }\n\n    function swapContent(direction) {\n      if ( direction == undefined ) direction = 1;\n      var page_span = document.getElementById('current-page');\n      if (!page_span) return true;\n      var next_page = direction + parseInt(page_span.innerHTML);\n      var res = results[next_page];\n      if (!res) return true;\n      var content = res['content'];\n      if (!content) return true;\n      var div = document.getElementById('search-results-main');\n      if (!div) return true;\n      div.innerHTML = content;\n      timer = window.setTimeout(\"getResults(\" + next_page + \")\", 1*1000);\n      window.scroll(0, 0);\n      return false;\n    }\n<mt:Else>\n  <mt:IfPreviousResults>\n    function swapContent(direction) {\n      return true;\n    }\n  </mt:IfPreviousResults>\n</mt:IfMoreResults>\n    \n  </head>\n  <body>\n    <div id=\"container\">\n      <div id=\"container-inner\">\n        <header id=\"header\" role=\"banner\">\n          <div id=\"header-inner\">\n            <$mt:Include module=\"Banner Header\"$>\n            <$mt:Include module=\"Navigation\"$>\n          </div>\n        </header>\n        <div id=\"content\">\n          <div id=\"content-inner\">\n            <div id=\"search-results-main\" class=\"main\" role=\"main\">\n<mt:SetVarTemplate id=\"search_results\" name=\"search_results\">\n  <mt:SearchResults>\n    <mt:SearchResultsHeader>\n              <section id=\"search-results\">\n                <span id=\"current-page\" class=\"hidden\"><$mt:CurrentPage$></span>\n                <h1 class=\"title\">\n      <MTIfStatic><mt:IfStraightSearch>\n                  Results matching &ldquo;<$mt:SearchString$>&rdquo;\n      </mt:IfStraightSearch></MTIfStatic>\n      <mt:IfTagSearch>\n                  Results tagged &ldquo;<$mt:SearchString$>&rdquo;\n      </mt:IfTagSearch>\n                </h1>\n    </mt:SearchResultsHeader>\n\n                <$mt:Include module=\"Entry Summary\" hide_counts=\"1\"$>\n\n    <mt:SearchResultsFooter>\n              </section>\n              <nav class=\"pagination\">\n                <ul>\n      <mt:IfMoreResults>\n                  <li><a rel=\"prev\" href=\"<$mt:NextLink encode_html=\"1\"$>\" onclick=\"return swapContent();\">Older entries</a></li>\n      </mt:IfMoreResults>\n      <mt:IfPreviousResults>\n                  <li><a rel=\"next\" href=\"<$mt:PreviousLink encode_html=\"1\"$>\" onclick=\"return swapContent(-1);\">Newer entries</a></li>\n      </mt:IfPreviousResults>\n                </ul>\n              </nav>\n    </mt:SearchResultsFooter>\n  </mt:SearchResults>\n</mt:SetVarTemplate>\n\n<$mt:Var name=\"search_results\"$>\n\n<mt:NoSearchResults>\n              <section>\n                <h1 class=\"search-results-header\">\n  <MTIfStatic><mt:IfStraightSearch>\n                  Results matching &ldquo;<$mt:SearchString$>&rdquo;\n  </mt:IfStraightSearch></MTIfStatic>\n  <mt:IfTagSearch>\n                  Results tagged &ldquo;<$mt:SearchString$>&rdquo;\n  </mt:IfTagSearch>\n                </h1>\n                <p>No results found for &ldquo;<$mt:SearchString$>&rdquo;.</p>\n              </section>\n</mt:NoSearchResults>\n\n<mt:NoSearch>\n              <section>\n                <h1 class=\"search-results-header\">Instructions</h1>\n                <p>By default, this search engine looks for all of the specified words in any order. To search for an exact phrase, enclose the phrase in quotes:</p>\n                <pre><code>\"movable type\"</code></pre>\n                <p>The search engine also supports the AND, OR, and NOT boolean operators:</p>\n                <pre><code>personal OR publishing</code></pre>\n                <pre><code>publishing NOT personal</code></pre>\n              </section>\n</mt:NoSearch>\n\n<mt:Ignore><!-- Used with the ajax search capability of the new search class --></mt:Ignore>\n<mt:IfMoreResults>\n              <script type=\"text/javascript\">\n                var div = document.getElementById('search-results');\n                var results = {\n                  '<$mt:CurrentPage$>': {\n                    'content': div.innerHTML,\n                    'next_url': '<$mt:NextLink$>'\n                  }\n                };\n                var timer = window.setTimeout(\"getResults(\" + <$mt:CurrentPage$> + \")\", 1*1000);\n              \n</mt:IfMoreResults>\n            </div>\n            <aside class=\"widgets related\" role=\"complementary\">\n              <$mt:WidgetSet name=\"Related Contents\"$>\n            </aside>\n          </div>\n        </div>\n        <footer id=\"footer\" role=\"contentinfo\">\n          <div id=\"footer-inner\">\n            <$mt:Include module=\"Banner Footer\"$>\n          </div>\n        </footer>\n      </div>\n    </div>\n    <script src=\"<$mt:StaticWebPath encode_html=\"1\"$>jquery/jquery.min.js\">\n    <script src=\"<$mt:Link template=\"javascript_theme\" encode_html=\"1\">\">\n  </body>\n</html>\n",
+        "updatable": true,
+        "name": "Search Results",
+        "customFields": [],
+        "linkToFile": "",
+        "type": "search_results",
+        "blog": {
+          "id": "20"
+        },
+        "modifiedDate": "2016-10-28T08:36:21+00:00",
+        "createdDate": "2016-10-28T08:36:21+00:00"
+      }
+    ]
+  }
+},
+	_LIST_USERS:{},
+	_init:function(){
+		var _df=new $.Deferred();
+		(function(){
+			var _df=new $.Deferred();
+			MT_DATA_API = new MT.DataAPI({
+				baseUrl:  "http://localhost/mt/mt-data-api.cgi",
+				clientId: "api10entries"
+			});
+			_df.resolve();
+			return _df.promise();
+		})().then(function(){
+			var _df=new $.Deferred();
+			MT_DATA_API.getToken(function(res) {
+				if (res.error) {
+					if (res.error.code===401) {
+					}
+					_df.reject();
+				}
+				_df.resolve();
+			});
+			return _df.promise();
+		}).then(
+			function(){
+				//トークン成功時は何もせず次のステップに進む
+			},
+			function(){
+				//トークンに失敗した場合は再度ログインさせる
+				var _df=new $.Deferred();
+				location.href =
+					MT_DATA_API.
+						getAuthorizationUrl(location.href);
+				_df.resolve();
+				return _df.promise();
+		}).then(function(){
+			//各サイトリスト(データ)を取得
+			var _df=new $.Deferred();
+			MT_DATA_API.listSites(
+				{limit:0,
+				sortOrder:'descend'
+				},function(res){
+					if (res.error) {
+						_consoleLog('listSites error');
+						_df.reject();
+					} else {
+						var _items=res.items;
+						//　ウェブサイト→ブログの
+						//	ハッシュ形式に格納する
+						for(var _i=0;_i<_items.length;_i++){
+							if(_items[_i].class==='website'){
+								$.dataapi._LIST_SITES[_items[_i].name]={};
+								$.dataapi._LIST_SITES[_items[_i].name].data=_items[_i];
+								$.dataapi._LIST_SITES[_items[_i].name].contains=[];
+
+								continue;
+							}
+						}
+						for(var _i=0;_i<_items.length;_i++){
+							if(_items[_i].class==='blog'){
+								$.dataapi._LIST_SITES[_items[_i].parent.name].contains.push(_items[_i]);
+							}
+						}
+						_consoleLog('listSites success');
+						_df.resolve();
+					}
+				});
+			return _df.promise();
+		}).then(function(){
+			//	取得したリストデータからhtmlに設定
+			var _str='';
+			for(var _key in $.dataapi._LIST_SITES) {
+				_str+='<div class="w_list">'+
+					'<div class="w_list_inner">'+
+					'<header class="title">'+_key+'</header>'+
+					'<div class="box_list">';
+				_str+=
+					'<div data-blogid="'+$.dataapi._LIST_SITES[_key].data.id+'" class="w_box box">'+
+					'<div class="box_img"><img src="./images/thumb-small.png"></div>'+
+					'<p class="title">'+_key+'</p>'+
+	            	'</div><!-- /.box -->';
+				var _l=$.dataapi._LIST_SITES[_key].contains;
+				for(var _j=0;_j<_l.length;_j++) {
+					_str+=
+						'<div data-blogid="'+_l[_j].id+'" class="b_box box">'+
+						'<div class="box_img"><img src="./images/thumb-small.png"></div>'+
+						'<p class="title">'+_l[_j].name+'</p>'+
+		            	'</div><!-- /.box -->';
+				}
+				_str+='</div><!-- /.box_list -->'+
+						'</div><!-- /.w_list_inner -->'+
+						'</div><!-- /.w_list -->';
+			}
+			_df.resolve(_str);
+//			$('#g_mainmenu_lists').append(_str);
+
+		}).done(function(){
+			_consoleLog('success');
+		}).fail(function(){
+			_consoleLog('fail');
+		});
+
+		return _df.promise();
+
+	}
+}//	$.dataapi
+
+})(jQuery, this, this.document);
+
+
+
+</script>
+<script>
+"use strict";
+const _G_MES_01='テンプレートを複製しますか？';
+const _G_MES_02='テンプレートを削除しますか？';
+const _G_MES_03='テンプレートを再構築しますか？';
+const _G_MES_04='テンプレートを移動しますか？';
+
+const _G_MES_10='編集中のブログを再構築しますか？';
+const _G_MES_11='編集中のブログをクローズしますか？';
+
+const _G_MES_20='編集中のテンプレートを保存しますか？';
+const _G_MES_22='編集中のテンプレートを保存・再構築しますか？';
+const _G_MES_23='編集中のテンプレートをクローズしますか？';
+
+const _G_CONSOLE_LOG_LEVEL=1;
+const _G_LOG_LEVEL=0;
+
+var _G_TIMERIDS=[];
+
+//=========================================================
+//	Orginal jQuery Function
+//=========================================================
+jQuery.fn.extend({
+	//.g_main_list配下のオブジェクトからブログIDを取得
+	ORG_getBlogId_gMain:function(){
+		return jQuery(this).parents('.g_main_list').find('var.blogid').text();
+	},
+	//.g_main_list配下のオブジェクトからtableのクラス名取得
+	ORG_getClassName_gMain:function(){
+		return jQuery(this).parents('table').attr('class');
+	},
+	//.g_main_list配下のオブジェクトからテンプレートID取得
+	ORG_getTpId_gMain:function(){
+		return jQuery(this).find('var.ipid').text();
+	}
+});
+
+//=========================================================
+//	common Program
+//=========================================================
+/**
+ * 日付をフォーマットする
+ * @param  {Date}   _date     日付
+ * @param  {String} [format] フォーマット
+ * @return {String}          フォーマット済み日付
+ */
+var G_FORMATDATE = function (_date, _format) {
+  if (!_format) _format = 'YYYY-MM-DD hh:mm:ss.SSS';
+  _format = _format.replace(/YYYY/g, _date.getFullYear());
+  _format = _format.replace(/MM/g, ('0' + (_date.getMonth() + 1)).slice(-2));
+  _format = _format.replace(/DD/g, ('0' + _date.getDate()).slice(-2));
+  _format = _format.replace(/hh/g, ('0' + _date.getHours()).slice(-2));
+  _format = _format.replace(/mm/g, ('0' + _date.getMinutes()).slice(-2));
+  _format = _format.replace(/ss/g, ('0' + _date.getSeconds()).slice(-2));
+  if (_format.match(/S/g)) {
+    var milliSeconds = ('00' + _date.getMilliseconds()).slice(-3);
+    var length = _format.match(/S/g).length;
+    for (var i = 0; i < length; i++) _format = _format.replace(/S/, milliSeconds.substring(i, i + 1));
+  }
+  return _format;
+};
+
+//=========================================================
+//	display program
+//=========================================================
+$(function(){
+//	コンソールログのラッパー
+var _consoleLog=function(_str){
+	if(_G_CONSOLE_LOG_LEVEL===0){return;}
+	console.log(_str);
+}
+//	確認ダイアログのラッパー
+//	LOGレベルを使って表示・日表示確認
+var _confirm=function(_str){
+	if(_G_LOG_LEVEL===0){return true;}
+	return confirm(_str);
+}
+// section.mainの高さ調整
+var _get_section_main_height=function(){
+    $('section.main').height(
+		$('.g_main_list').height()-
+        $('.g_main_list .title').outerHeight(true)-
+        $('.g_main_list header').outerHeight(true)-
+		parseInt($('.g_main_list header').css('margin-bottom'))
+	);
+};
+//	ドロップ時、テンプレート名の設定。
+//	ドロップ先のテンプレート群に同じ名前のテンプレート名があれば、
+//	リネームを行う。
+//	$_ud:ui.helper
+//	$_target_tl：ターゲット先のオブジェクト(.tp_lists)
+var _get_tp_lists_tpname=function($_ud, $_target_tl){
+	$_ud.each(function(){
+		var $this=$(this);
+	    var _name=$this.find('.template').text();
+	    var _obj=$_target_tl.find('tbody tr');
+		//	同じテンプレート名を洗い出し、配列に格納する。
+		var _ar=$.map(_obj.find('.template'),function(n){
+			return ($(n).text()
+					.match(new RegExp(_name,'')))
+					?$(n).text()
+					:null;
+			});
+		for(var _i=0;_i<_ar.length;_i++){
+			_name=(_ar[_i]===_name)
+					?_name+'_'+(G_FORMATDATE(new Date(),'YYYYMMDDhhmmss'))+'_'+_i
+					:_name;
+		}
+	    $this.find('.template').text(_name);
+	});
+};
+var _set_dialog=function(){
+//	$('section#g_dialog').dialog({
+//		autoOpen:false,
+//		height:window.innerHeight-50,
+//		hide:100,
+//		modal:true,
+//		show:100,
+//		width:window.innerWidth-50
+//	});
+};
+var _set_dialog_open=function($obj){
+	_set_dialog_init($obj);
+	$('#g_dialog').addClass('on');
+};
+var _set_dialog_init=function($obj){
+	var $i=$('#g_dialog_inner .box.title input');
+	$i.removeAttr('disabled').val($obj.text());
+	$('#g_dialog_inner').scrollTop(0);
+	var _t=$obj.parents('.tp_lists').attr('class');
+	if(_t.indexOf('type_sys')!==-1){
+		$i.attr('disabled','disabled');
+	}
+	//	setting	the display of template options
+	$('#g_dialog_inner .template_options')
+		.removeClass('on')
+		.parent()
+		.find('.'+_t.replace('tp_lists ',''))
+		.addClass('on');
+}
+
+var _set_drag_tp_lists={
+//	revert:true,
+//	helper:'clone',
+	appendTo:'#g_drag_tp_lists',
+	containment:'#g_main #g_main_inner',
+	zIndex:1000,
+	helper:function(e,_ui){
+		_consoleLog('helper');
+		var $uis=$('.ui-selected').clone();
+		var _w=$(e.currentTarget).outerWidth(true);
+		return '<table style="width:'+_w+'px">'+$uis.map(function(){return $(this)[0].outerHTML;}).get().join('')+'</table>';
+	},
+	start:function(e,_ui){
+		_consoleLog('drag start');
+		var $uh=$(e.currentTarget);
+		var _bid=$uh.parents('.g_main_list').find('var.blogid').text();
+		_consoleLog(_bid);
+		$('.g_main_list').each(function(){
+			var $this=$(this);
+			if(_bid!==$this.find('var.blogid').text()){
+				$this.find('.bt.reb,.bt.del').addClass('off');
+			}
+		});
+		if(_ui.helper.is('tr[data-type=type_m]')===true){
+			$('.g_main_list').find('.bt.reb').addClass('off');
+			_consoleLog('drag start type_m');
+		}
+		if(_ui.helper.is('tr[data-type=type_s]')===true){
+			$('.g_main_list').find('.bt.dup,.bt.reb,.bt.del').addClass('off');
+			_consoleLog('drag start type_s');
+		}
+	},
+	stop:function(e,_ui){
+		_consoleLog('drag stop');
+		_init_tp_list();
+	},
+	drag:function(e,_ui){
+		_consoleLog('draging');
+	}
+};
+var _set_drop_tp_lists={
+	//$(this)→Drop先
+	//_ui.draggable→Drag元
+	accept:'.tp_lists tbody tr',
+	tolerance:'pointer',
+	over:function(e,_ui){
+		_consoleLog('tr over');
+	},
+	out:function(e,_ui){
+		_consoleLog('tr out');
+	},
+	drop:function(e,_ui){
+		_consoleLog('tr drop');
+		if(_ui.draggable.ORG_getBlogId_gMain()===
+			$(this).ORG_getBlogId_gMain()&&
+		   _ui.draggable.ORG_getClassName_gMain()===
+    		$(this).ORG_getClassName_gMain()
+		){
+			_consoleLog('same');
+			_init_tp_list();
+			return;
+		}
+		$(_ui.helper).removeAttr('style');
+		$(this).parent().append($(_ui.helper).clone());
+//		$(this).parents('.tp_lists').find('thead th').css({backgroundColor:''});
+
+		$('.g_main_list').find('.bt.reb,.bt.del').removeClass('off');
+		$(_ui.helper).parents('tbody').find('.ui-selected').remove();
+		_init_tp_list();
+
+	}
+};
+var _set_drop_section_main={
+	//$(this)→Drop先
+	//_ui.draggable→Drag元
+	accept:'.tp_lists tbody tr',
+	tolerance:'pointer',
+	over:function(e,_ui){
+		_consoleLog('section.main tr over');
+		//	return while loading
+		if($(this).parents('.g_main_list').find('.g_main_loading.on').length!==0){
+			return;
+		}
+		if(_ui.draggable.ORG_getBlogId_gMain()===
+			$(this).ORG_getBlogId_gMain()){
+			_consoleLog('section.main tr over same');
+			return;
+		}
+		if(_ui.helper.is('tr[data-type=type_s]')===true){
+			$(this).addClass('type_sys');
+			_consoleLog('section.main type_s');
+		}
+		$(this).addClass('on');
+	},
+	out:function(e,_ui){
+		_consoleLog('section.main tr out');
+		$(this).removeClass('type_sys on');
+	},
+	drop:function(e,_ui){
+		_consoleLog('section.main tr drop');
+		//	return while loading
+		if($(this).parents('.g_main_list').find('.g_main_loading.on').length!==0){
+			return;
+		}
+		$(this).removeClass('type_sys on');
+		if(_ui.draggable.ORG_getBlogId_gMain()===
+			$(this).ORG_getBlogId_gMain()){
+			_consoleLog('same');
+			_init_tp_list();
+			return;
+		}
+		if(_ui.helper.is('tr[data-type=type_s]')===true){
+			_consoleLog('section.main include type_s');
+			_init_tp_list();
+			return;
+		}
+
+		$(_ui.helper).removeAttr('style');
+		_get_tp_lists_tpname($(_ui.helper),$(this).find('table:eq('+$(_ui.draggable).parents('table').index()+')'));
+		$(this).find('table').eq($(_ui.draggable).parents('table').index()).append($(_ui.helper).clone());
+		_ui.draggable.parents('table')
+			.find('.ui-selected').remove();;
+		_init_tp_list();
+
+	}
+};
+var _set_sort_tp_lists={
+    connectWith:'.tp_lists:not(.type_sys) tbody',
+    items:'tr:not( .tp_list_empty)',
+    revert:100,
+	cursor:'pointer',
+	helper:'clone',
+    opacity:0.8,
+    start:function(){
+        _consoleLog('start');
+    },
+    sort:function(e,ui){
+        _consoleLog('sort');
+    },
+	update:function(){
+//		_consoleLog('update');
+	},
+    remove:function(e,ui){
+		_consoleLog('remove');
+		if(!_confirm(_G_MES_04)){
+			$(this).sortable('cancel');
+			return;
+		}
+		_get_tp_lists_tpname(
+			ui.item,
+			ui.item.parents('.tp_lists')
+		);
+		ui.item.removeAttr('style')
+				.find('td')
+				.removeClass('on');
+    },
+    zIndex:1000
+};
+var _set_drop_bt={
+    accept:'.tp_lists tbody tr',
+    tolerance:'pointer',
+    over:function(){
+    },
+    out:function(){
+    },
+    drop:function(e, _ui) {
+        _consoleLog('drop');
+        var $_ud=_ui.draggable;
+        if($(this).attr('class').indexOf('dup')!==-1) {
+			if(!_confirm(_G_MES_01)){return;}
+			_ui.helper.remove();
+			this._test();
+
+			var $gml=
+				$(this).parents('.g_main_list');
+			var _ix=				$_ud.parents('table.tp_lists').index();
+            //	back to on the lists
+			$(_ui.helper).removeAttr('style');
+			var $_udc=$(_ui.helper).clone();
+
+			_get_tp_lists_tpname($_udc,$(this).parents('.g_main_list').find('table:eq('+$(_ui.draggable).parents('table').index()+')'));
+
+            //	appended to the bottom
+			$gml.find('table.tp_lists')
+				.eq(_ix)
+				.append($_udc);
+
+			_init_tp_list();
+        } else if($(this).attr('class').indexOf('del')!==-1){
+			//  remove List
+			if(!_confirm(_G_MES_02)){return;}
+			$(this).parents('.g_main_list').find('.ui-selected').remove();
+			_init_tp_list();
+//			_ui.helper.remove();
+        } else {
+            //  rebuild List
+			if(!_confirm(_G_MES_03)){return;}
+			_ui.helper.remove();
+			_init_tp_list();
+        }
+    }
+}
+
+//	initializing
+var _init=function(){
+	$(document).tooltip({hide:100,show:100,position:{my:'left+15 top-5'}});
+	_get_section_main_height();
+	$('#g_loading').removeClass('on');
+	_init_tp_list();
+};
+var _init_site_list=function(){
+	$('#g_mainmenu_lists .w_list .box:not(.on)').draggable({
+		appendTo:'#g_drag_box_lists',
+		revert:100,
+		helper:'clone',
+		zIndex:10000
+	});
+}
+var _init_tp_list=function(){
+	_consoleLog('_init_tp_list');
+	//setting selectable
+	$('#g_main .main_inner')
+		.selectable({
+			filter:'.tp_lists tbody tr:not(".tp_list_empty")',
+			selected:function(e,_ui){
+				$(_ui.selected).draggable('enable');
+			},
+			unselected:function(e,_ui){
+				$(_ui.selected).draggable('disable');
+			},
+			start:function(e,_ui){
+				_consoleLog('start');
+				_init_tp_list();
+			}
+		});
+	//setting draggable
+	$('#g_main .tp_lists tbody tr')
+		.draggable(_set_drag_tp_lists)
+		.draggable('disable')
+		.removeClass('ui-selected');
+	//setting droppable
+	$('#g_main section.main')
+		.droppable(_set_drop_section_main);
+	//setting droppable
+	$('#g_main header .bt')
+		.droppable(_set_drop_bt);
+	$('.g_main_list')
+		.find('.bt.dup,.bt.reb,.bt.del')
+		.removeClass('off');
+	$('#g_main .tp_lists tbody tr *')
+		.removeAttr('style');
+	$('#g_mainmenu_lists .w_list .box:not(".on")')
+		.draggable({
+		appendTo:'#g_drag_box_lists',
+		containment:'body',
+	    revert:100,
+	    helper:'clone',
+	    zIndex:10000
+	});
+}
+
+$('#g_mainmenu_lists').on('dblclick','.box',function(e){
+	_consoleLog('.box');
+	_consoleLog($(this).data('blogid'));
+	return false;
+});
+$('#g_mainmenu_lists').on('click','.box .box_delete',function(e){
+	_consoleLog('.box .icon_close_alt');
+	_consoleLog($(this).parent().data('blogid'));
+	return false;
+});
+$('#g_mainmenu_lists .header .bt.download').on('click',function(){
+	_consoleLog('download blogid:'+$(this).parents('.w_list').data('blogid'));
+});
+$('#g_mainmenu_lists .header .bt.new').on('click',function(){
+	_consoleLog('new blogid:'+$(this).parents('.w_list').data('blogid'));
+});
+$('#g_mainmenu_icon').on('click',function(){
+    $('#g_mainmenu').toggleClass('on');
+	$('#g_droppable').toggleClass('on');
+});
+$('#g_droppable, #g_main').on('click',function(){
+    $('#g_mainmenu').removeClass('on');
+	$('#g_droppable').removeClass('on');
+});
+
+
+$('#g_dialog').on('click','#bt_save',function(){
+});
+$('#g_dialog').on('click','#bt_preview',function(){
+});
+$('#g_dialog').on('click','#bt_save_pub',function(){
+});
+$('#g_dialog').on('click','#bt_close',function(){
+	$('#g_dialog').removeClass('on');
+});
+
+//	tab rebuildボタン
+$('#g_main').on('click','.tab_bts .bt.reb',function(){
+	if(!_confirm(_G_MES_10)){return;}
+	var $this=$(this);
+});
+//	tab クローズボタン
+$('#g_main').on('click','.tab_bts .bt.close',function(){
+	if(!_confirm(_G_MES_11)){return;}
+	var $this=$(this);
+	var _bid =$this.parents('.g_main_list').find('var.blogid').text();
+	$('#g_mainmenu').find('[data-blogid="'+_bid+'"]').removeClass('on');
+    $this.parents('.g_main_list').fadeOut(500,function(){
+        $(this).remove();
+    });
+});
+
+$('#g_main').on('click','header .bt.dup',function(){
+	if(!_confirm(_G_MES_01)){return;}
+	//	チェックボックスからのテンプレート複製
+	var $ckd_tpl=$(this).parents('.g_main_list')
+			.find('.tp_lists input[type="checkbox"]:checked');
+	$ckd_tpl.each(function(_i){
+		var $this=$(this);
+		$this.prop('checked',false);
+		var $ta=$this.parents('.tp_lists');
+		var $tb=$this.parents('tbody');
+		var $tr=$this.parents('tr').clone();
+		$tr.find('td').removeClass('on');
+		$tr.find('.template').text(
+			_get_tp_lists_tpname($tr,$ta)
+			);
+		$tb.append($tr);
+	});
+	_init_tp_list();
+
+});
+$('#g_main').on('click','header .bt.del',function(){
+	if(!_confirm(_G_MES_02)){return;}
+	//	チェックボックスからのテンプレート削除
+	$(this).parents('.g_main_list')
+			.find('.tp_lists input[type="checkbox"]:checked')
+			.closest('tr')
+			.fadeOut(500,function(){
+		        $(this).remove();
+		    });
+});
+$('#g_main').on('click','header .bt.reb',function(){
+	if(!_confirm(_G_MES_03)){return;}
+});
+
+$('#g_main').on('mousedown',
+	'.tp_lists thead th .bt.new',function(){
+	_consoleLog('.tp_lists thead th .bt.new  .ui-selectable-disabled');
+	return false;
+//	_set_dialog_open($(this));
+});
+$('#g_main').on('click',
+	'.tp_lists tbody tr:not(".tp_list_empty")'
+	,function(){
+	_consoleLog('.template click');
+	_set_dialog_open($(this));
+});
+
+
+$('#g_dialog #new_archive_type > div:not(.off)').draggable({
+    revert:200,
+    helper:'clone',
+    zIndex:10000
+});
+
+$('#g_mainmenu').droppable({disable:true});
+
+$('#g_droppable').droppable({
+	tolerance:"touch",
+	over:function(e,ui){
+		_consoleLog('g_droppable over');
+		var $g_d=$('#g_droppable.on');
+		var _dgi=ui.draggable.data('blogid');
+		var $gml_bid=$('#g_main .g_main_list .blogid:contains('+_dgi+')');
+		//	ドロップエリアに表示
+		$g_d.addClass(($gml_bid.length===0)?'over able':'over disable');
+		//	ステージ上にあるリストにアニメーションする
+		$gml_bid.parents('#g_main .g_main_list').addClass('on');
+    },
+	out:function(e,ui){
+		_consoleLog('g_droppable out');
+		$('#g_droppable.on').removeClass('over disable able');
+		//	ステージ上にあるlistのアニメーションを削除
+		$('#g_main .g_main_list').removeClass('on');
+    },
+    drop:function(e,ui) {
+		_consoleLog('g_droppable drop');
+		$('#g_main .g_main_list').removeClass('on');
+		$('#g_droppable.on.over')
+			.removeClass('over able disable');
+		var _dgi=ui.draggable.data('blogid');
+		var _dgi_class=ui.draggable.attr('class').replace(' box','');
+		//	すでに存在するblogidはここで終了
+		if($('.g_main_list .blogid:contains('+_dgi+')').length!==0){return;}
+
+		//	ステージに表示
+		var $clone=$('.g_main_list').eq(0).clone();
+        $('#g_main #g_main_inner').append(
+			$clone.hide().fadeIn(800)
+			);
+		//	スタイルの調整
+		$clone.removeClass('w_box b_box')
+			.addClass(_dgi_class);
+		$clone.find('.blogid').text(_dgi);
+		//	title名の設定
+		$clone.find('.tab .title')
+			.text(ui.helper.find('.title').text());
+        ui.helper.remove();
+
+		_init_tp_list();
+		//	dragあとはドラッグしたサイトボックスのステータスを変える
+		ui.draggable.addClass('on');
+    }
+});
+
+
+$('#g_main #g_main_inner').sortable({
+    axis:'x',
+    items:'> .g_main_list',
+    handle:'.tab',
+	scroll:false,
+    opacity:0.8,
+	start(e,_ui){
+		_consoleLog('sortable start');
+		_init_tp_list();
+	},
+    deactivate:function(e,ui){
+        _consoleLog('sortable deactivate');
+        $('.g_main_list').removeAttr('style');
+    }
+});
+
+$(window).on('resize', function(){
+	_init_tp_list();
+    _get_section_main_height();
+});
+_init();
+
+
+}); //  function()
+</script>
+</head>
+<body>
+
+<section id="g_loading" class="on">
+<div id="loading_icon">
+<div id="loading_rotate" class="out"></div>
+<div id="loading_rotate" class="in"></div>
+</div><!-- #loading_icon -->
+</section><!-- #g_loading -->
+
+<section id="g_dialog" class="">
+<header><span>Edit Template</span></header>
+<div id="g_dialog_inner">
+<form>
+<div class="box title">
+<input type="text">
+</div><!-- /.box -->
+<div class="box">
+<textarea name="text"></textarea>
+</div><!-- /.box -->
+
+<div class="template_options type_idx">
+	<div class="box">
+	<p>Output File</p>
+	<input type="text" name="outfile" id="outfile" class="text first-child last-child" tabindex="4" value="tpctrl/index.html" mt:watch-change="1">
+	</div><!-- /.box -->
+	<div class="box">
+	<p>Template Type</p>
+	<select name="identifier" id="identifier" tabindex="5" class="first-child last-child">
+	<option value="" class="first-child">Custom Index Template</option>
+	<option value="main_index" selected="selected">Main Index (main_index)</option>
+	<option value="styles">Stylesheet (styles)</option>
+	<option value="javascript">JavaScript (javascript)</option>
+	<option value="feed_recent">Feed - Recent Entries (feed_recent)</option>
+	<option value="styles_ie">Stylesheet for IE (8 or lower) (styles_ie)</option>
+	<option value="javascript_theme" class="last-child">JavaScript - Theme (javascript_theme)</option>
+	</select>
+	</div><!-- /.box -->
+	<div class="box">
+	<p>Link to File</p>
+	<input type="text" name="linked_file" id="linked_file" class="text first-child last-child" tabindex="8" value="E:\git\DataAPI\mt_tp_ctrl\index.html" maxlength="255" mt:watch-change="1">
+	</div><!-- /.box -->
+	<div class="box">
+	<p>Publishing</p>
+	<select name="build_type" id="build-type" class="half-width first-child">
+	<option value="1" selected="selected" class="first-child">Statically (default)</option>
+	<option value="4">Via Publish Queue</option>
+	<option value="3">Dynamically</option>
+	<option value="2">Manually</option>
+	<option value="0" class="last-child">Do Not Publish</option>
+	</select>
+	</div><!-- /.box -->
+</div><!-- /.template_options -->
+
+<div style="display:block;" class="template_options type_arc">
+	<div class="box_arc">
+		<p>Archive Mapping</p>
+		<div id="sel_new_archive_type">
+			<div id="new_archive_type">
+				<div data-value="Daily">Entry</div>
+				<div data-value="Daily">Page</div>
+			    <div data-value="Daily">Daily</div>
+			    <div data-value="Weekly">Weekly</div>
+				<div data-value="Monthly">Monthly</div>
+				<div data-value="Yearly">Yearly</div>
+				<div data-value="Author">Author</div>
+				<div data-value="Author-Daily">Author Daily</div>
+				<div data-value="Author-Weekly">Author Weekly</div>
+				<div data-value="Author-Monthly">Author Monthly</div>
+				<div data-value="Author-Yearly">Author Yearly</div>
+				<div data-value="Category">Category</div>
+				<div data-value="Category-Daily">Category Daily</div>
+				<div data-value="Category-Weekly">Category Weekly</div>
+				<div data-value="Category-Monthly">Category Monthly</div>
+				<div data-value="Category-Yearly">Category Yearly</div>
+			</div>
+		</div><!-- #sel_arc_type -->
+
+		<div class="drop_set_map">
+		<table>
+			<thead>
+				<tr><th>
+					<div class="type">Type</div>
+					<div class="path">Path</div>
+					<div class="publishing">Publishing</div>
+				</th></tr>
+			</thead>
+			<tbody>
+				<tr><td>
+					<div class="type"><span>Page</span></div>
+					<div class="path">
+						<input class="off" type="text">
+						<select>
+							<option>1</option>
+							<option>Other...</option>
+						</select>
+					</div>
+					<div class="publishing">
+						<select name="build_type" id="build-type" class="half-width first-child">
+							<option value="1" selected="selected" class="first-child">Statically (default)</option>
+							<option value="4">Via Publish Queue</option>
+							<option value="3">Dynamically</option>
+							<option value="2">Manually</option>
+							<option value="0" class="last-child">Do Not Publish</option>
+						</select>
+
+					</div>
+				</td></tr>
+			</tbody>
+		</table>
+		</div><!-- /.drop_set_map -->
+	</div><!-- .box_arc -->
+	<div class="box">
+	<p>Link to File</p>
+	<input type="text" name="linked_file" id="linked_file" class="text first-child last-child" tabindex="8" value="E:\git\DataAPI\mt_tp_ctrl\index.html" maxlength="255" mt:watch-change="1">
+	</div><!-- /.box -->
+</div><!-- /.template_options -->
+
+<div class="template_options type_mod">
+	<div class="box">
+	<p>Link to File</p>
+	<input type="text" name="linked_file" id="linked_file" class="text first-child last-child" tabindex="8" value="E:\git\DataAPI\mt_tp_ctrl\index.html" maxlength="255" mt:watch-change="1">
+	</div><!-- /.box -->
+</div><!-- /.template_options -->
+
+<div class="template_options type_sys">
+	<div class="box">
+	<p>Link to File</p>
+	<input type="text" name="linked_file" id="linked_file" class="text first-child last-child" tabindex="8" value="E:\git\DataAPI\mt_tp_ctrl\index.html" maxlength="255" mt:watch-change="1">
+	</div><!-- /.box -->
+</div><!-- /.template_options -->
+
+<div class="box">
+<p>Change note</p>
+<input type="text" name="revision-note" id="revision-note" class="text full first-child last-child" value="">
+</div><!-- /.box -->
+
+<div class="box">
+<button type="button" id="bt_save">Save Changes</button>
+<button type="button" id="bt_preview">Preview</button>
+<button type="button" id="bt_save_pub">Save &amp; Publish</button>
+<button type="button" id="bt_close">Close</button>
+</div>
+</form>
+</div><!-- #g_dialog_inner -->
+</section><!-- #g_dialog -->
+
+
+<section id="g_mainmenu" class="">
+<header id="g_mainmenu_header">
+<div id="g_mainmenu_icon" class="box"><div id="g_mainmenu_icon_inner"></div>
+</div><!-- /.g_mainmenu_icon -->
+<div class="menu box">
+<div class="menu_inner">
+<a nohref="">Entries</a>
+<a nohref="">Pages</a>
+<a nohref="">Assets</a>
+<a nohref="">Categories</a>
+<a nohref="">Comments</a>
+<a nohref="">Folders</a>
+<a nohref="">Permissions</a>
+<a nohref="">Stats</a>
+<a nohref="">Users</a>
+</div><!-- /.menu_inner -->
+</div><!-- /.menu -->
+<div class="search box">
+<form>
+<label for="g_mainmenu_search_text"></label>
+<input type="text" id="g_mainmenu_search_text">
+<buttom type="submit"></buttom>
+</form>
+</div><!-- /.search -->
+<div class="user box">
+<a href="#" class="user_pic"><img src="./_images/user.jpg"></a>
+<a href="#" class="name">Takahashi Masaya</a>
+</div><!-- /.g_mainmenu_user -->
+<div class="other box">
+<a href="" class="help">Help</a>
+</div>
+</header><!-- #g_mainmenu_header -->
+
+<div id="g_mainmenu_wrapper">
+<div id="g_mainmenu_inner">
+    <div id="g_mainmenu_lists">
+        <div class="w_list" data-blogid="1">
+			<div class="w_list_inner">
+            <header class="header">
+				<div title="ウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトA" class="title">ウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトA</div>
+				<div class="tab_bts">
+					<div title="refresh" class="bt download icon_download"></div>
+					<div title="new blog" class="bt new icon_plus"> </div>
+				</div>
+			</header>
+			<div class="box_list">
+            <div data-blogid="1" class="box_has_b w_box box on">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトAウェブサイトA</p>
+				<div class="box_dropped"><p>Droppedkoekfpweofkpweofwpefkweofkwpeofkwpeofkwpeofkwpeofkwpeofkwepofkwefokw</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+            <div data-blogid="2" class="b_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ブログA</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+            <div data-blogid="3" class="b_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ブログB</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+			</div><!-- /.box_list -->
+		</div><!-- /.w_list_inner -->
+        </div><!-- /.w_list -->
+        <div class="w_list" data-blogid="4">
+			<div class="w_list_inner">
+			<header class="header">
+				<div title="ウェブサイトB" class="title">ウェブサイトB</div>
+				<div class="tab_bts">
+					<div title="refresh" class="bt download icon_download"></div>
+					<div title="new blog" class="bt new icon_plus"> </div>
+				</div>
+			</header>
+			<div class="box_list">
+            <div data-blogid="4" class="box_has_b w_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ウェブサイトB</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+            <div data-blogid="5" class="b_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ブログA</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+            <div data-blogid="6" class="b_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ブログB</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+			</div><!-- /.box_list -->
+		</div><!-- /.w_list_inner -->
+        </div><!-- /.w_list -->
+        <div class="w_list" data-blogid="7">
+			<div class="w_list_inner">
+			<header class="header">
+				<div title="ウェブサイトC" class="title">ウェブサイトC</div>
+				<div class="tab_bts">
+					<div title="refresh" class="bt download icon_download"></div>
+					<div title="new blog" class="bt new icon_plus"> </div>
+				</div>
+			</header>
+			<div class="box_list">
+            <div data-blogid="7" class="box_has_b w_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ウェブサイトC</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+            <div data-blogid="8" class="b_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ブログA</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+            <div data-blogid="9" class="b_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ブログB</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+			</div><!-- /.box_list -->
+		</div><!-- /.w_list_inner -->
+        </div><!-- /.w_list -->
+		<div class="w_list" data-blogid="7">
+			<div class="w_list_inner">
+			<header class="header">
+				<div title="ウェブサイトC" class="title">ウェブサイトC</div>
+				<div class="tab_bts">
+					<div title="refresh" class="bt download icon_download"></div>
+					<div title="new blog" class="bt new icon_plus"> </div>
+				</div>
+			</header>
+			<div class="box_list">
+            <div data-blogid="10" class="w_box box">
+                <div class="box_img"><img src="./images/thumb-small.png"></div>
+                <p class="title">ウェブサイトC</p>
+				<div class="box_dropped"><p>Dropped</p></div>
+				<div class="box_delete icon_close_alt" title="Delete"></div>
+            </div><!-- /.box -->
+			</div><!-- /.box_list -->
+		</div><!-- /.w_list_inner -->
+        </div><!-- /.w_list -->
+    </div><!-- /#g_mainmenu_lists -->
+	<section class="g_main_loading">
+	<div class="g_main_loading_icon">
+	<div class="g_main_loading_rotate out"></div>
+	<div class="g_main_loading_rotate in"></div>
+	</div><!-- .g_main_loading_icon -->
+	</section><!-- g_main_loading -->
+</div><!-- /#g_mainmenu_inner -->
+</div><!-- /#g_mainmenu_wrapper -->
+</section><!-- /#g_mainmenu -->
+
+<section id="g_droppable">
+</section><!-- /#g_droppable -->
+
+<section id="g_main">
+<div id="g_main_inner">
+<div class="g_main_list w_box" data-blogid="2">
+	<var class="blogid">1</var>
+	<div class="tab">
+		<div title="ウェブサイトでございます。" class="title w">ウェブサイトでございます。</div>
+        <section class="tab_bts">
+			<div title="View Site" class="bt viewsite icon_viewsite"> View Site </div><!--
+            --><div title="refresh" class="bt download icon_download"> download </div><!--
+			--><div title="rebuild" class="bt rebuild icon_rebuild"> Rebuild </div><!--
+            --><div title="close" class="bt close icon_close"> × </div>
+        </section>
+    </div><!-- /.tab -->
+    <header>
+        <div class="bt dup icon_dup">Duplicate</div>
+        <div class="bt reb icon_rebuild">Rebuild</div>
+        <div class="bt del icon_delete">Del</div>
+    </header>
+
+    <section class="main">
+	<div class="main_inner">
+    <table class="tp_lists type_idx">
+        <thead><tr><th>
+			<div class="template">Index Templates</div>
+			<section class="tab_bts">
+				<div class="bt new icon_plus"> </div>
+			</section>
+		</th></tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_i" data-tpid="2153">
+            <td class="">
+                <div class="template">Index1</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">index2 スタイルシート</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="tp_lists type_arc">
+        <thead><tr><th>
+			<div class="template">Archive Templates</div>
+			<section class="tab_bts">
+				<div class="bt new icon_plus">E</div>
+				<div class="bt new icon_plus">EL</div>
+				<div class="bt new icon_plus">P</div>
+			</section>
+		</th></tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_a" data-tpid="2153">
+            <td>
+                <div class="template">Archive スタイルシート</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_a" data-tpid="2153">
+            <td>
+                <div class="template">Archive スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="tp_lists type_mod">
+        <thead><tr><th>
+			<div class="template">Template Modules</div>
+			<section class="tab_bts">
+				<div class="bt new icon_plus"></div>
+			</section>
+		</th></tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_m" data-tpid="2153">
+            <td>
+                <div class="template">TM スタイルシート</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_m" data-tpid="2153">
+            <td>
+                <div class="template">TM スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="tp_lists type_sys">
+        <thead><tr>
+            <th><div class="template">System Template</div></th>
+        </tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_s" data-tpid="2153">
+            <td>
+                <div class="template">ST スタイルシート1</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_s" data-tpid="2153">
+            <td>
+                <div class="template">ST スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+	</div><!-- /.main_inner -->
+    </section><!-- /.main -->
+	<section class="g_main_loading">
+	<div class="g_main_loading_icon">
+	<div class="g_main_loading_rotate out"></div>
+	<div class="g_main_loading_rotate in"></div>
+	</div><!-- .g_main_loading_icon -->
+	</section><!-- g_main_loading -->
+</div><!-- /.g_main_list -->
+
+<div class="g_main_list b_box" data-blogid="2">
+	<var class="blogid">2</var>
+    <div class="tab">
+		<div title="ウェブサイトでございます。" class="title w">aaaaaaaa</div>
+        <div title="ブログでございます。" class="title b">aaaaaaaa</div>
+		<section class="tab_bts">
+			<div title="View Site" class="bt viewsite icon_viewsite"> View Site </div><!--
+            --><div title="refresh" class="bt download icon_download"> download </div><!--
+			--><div title="rebuild" class="bt rebuild icon_rebuild"> Rebuild </div><!--
+            --><div title="close" class="bt close icon_close"> × </div>
+        </section>
+    </div><!-- /.tab -->
+    <header>
+		<div class="bt dup icon_dup">Duplicate</div>
+        <div class="bt reb icon_rebuild">Rebuild</div>
+        <div class="bt del icon_delete">Del</div>
+    </header>
+
+    <section class="main">
+	<div class="main_inner">
+    <table class="tp_lists type_idx">
+        <thead><tr><th>
+			<div class="template">Index Templates</div>
+			<section class="tab_bts">
+				<div class="bt new icon_plus"> </div>
+			</section>
+		</th></tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">Index1</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+			<tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+			<tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+			<tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+			<tr data-type="type_i" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="tp_lists type_arc">
+        <thead><tr><th>
+			<div class="template">Archive Templates</div>
+			<section class="tab_bts">
+				<div class="bt new icon_plus">E</div>
+				<div class="bt new icon_plus">EL</div>
+				<div class="bt new icon_plus">P</div>
+			</section>
+		</th></tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_a" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート1</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_a" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="tp_lists type_mod">
+        <thead><tr><th>
+			<div class="template">Template Modules</div>
+			<section class="tab_bts">
+				<div class="bt new icon_plus"></div>
+			</section>
+		</th></tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_m" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート1</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_m" data-tpid="2153">
+            <td>
+                <div class="template">
+                    Copy of スタイルシート2</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="tp_lists type_sys">
+        <thead><tr>
+            <th><div class="template">System Template</div></th>
+        </tr></thead>
+        <tbody class="ui-sortable">
+            <tr data-type="type_s" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+            <tr data-type="type_s" data-tpid="2153">
+            <td>
+                <div class="template">Copy of スタイルシート</div>
+                <div class="hb icon_arrow">&nbsp;</div>
+            </td>
+            </tr>
+        </tbody>
+    </table>
+
+	</div><!-- /.main_inner -->
+    </section><!-- /.main -->
+	<section class="g_main_loading">
+	<div class="g_main_loading_icon">
+	<div class="g_main_loading_rotate out"></div>
+	<div class="g_main_loading_rotate in"></div>
+	<progress value="10" max="100"></progress>
+	</div><!-- .g_main_loading_icon -->
+	</section><!-- .g_main_loading -->
+</div><!-- /.g_main_list -->
+
+</div><!-- #g_main_inner -->
+<section id="g_drag_tp_lists">
+</section><!-- /#g_drag_tp_lists -->
+
+</section><!-- /#g_main -->
+
+<section id="g_drag_box_lists">
+</section><!-- /#g_drag_box_lists -->
+
+<section id="g_footer">
+2016.11.12 M.Takahashi. Powered by Mobable Type<br/>
+jQuery v3.1.0<br/>
+jQuery UI v1.12.0<br/>
+</section><!-- /#g_footer -->
+
+</body>
+</html>

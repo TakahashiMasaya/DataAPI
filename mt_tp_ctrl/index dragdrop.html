@@ -1,0 +1,1085 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title></title>
+<script src="/plugins/jquery-3.1.0.min.js"></script>
+<script src="/plugins/jquery-ui.min.js"></script>
+<script src="http://localhost/mt/mt-static/data-api/v3/js/mt-data-api.min.js"></script>
+<link rel="stylesheet" href="/plugins/reset.css">
+<link rel="stylesheet" href="/plugins/jquery-ui.min.css">
+<style>
+body {min-width:1000px;}
+body * {box-sizing:border-box;}
+
+.ui-selecting {background: #FECA40;}
+.ui-selected {background: #F39814;}
+
+input[type=button]{
+	border:1px solid #999999;
+	border-radius:5px;
+	background-color:#eeeeee;
+	cursor:pointer;
+	padding:5px 10px;
+	}
+input[type=button][disabled]{cursor:default;opacity:0.5;}
+
+
+.selBlogs .list_temp_header .list_bt_ctrl{margin-bottom:10px;}
+.selBlogs .list_temp_header .list_bt_ctrl input[type=button]{margin-right:10px;}
+
+.selBlogs {width:100%;}
+.selBlogs .selBlogs_display_left {padding:10px;vertical-align:top;width:45%;}
+.selBlogs .selBlogs_display_right {padding:10px;vertical-align:top;width:45%;}
+.selBlogs .selBlogs_display_middle {vertical-align:top;width:10%;}
+
+.selBlogs .selBlogs_display_middle .bt {
+	background: #eeeeee;
+	border: 1px solid #bbbbbb;
+	border-radius: 10px;
+	cursor:pointer;
+	display: block;
+	margin: 20px auto;
+	padding: 10px 0px;
+	text-align: center;
+	width: 5em;
+	}
+.selBlogs .selBlogs_display_middle .bt p{font-size:0.8em;}
+.selBlogs .selBlogs_display_header select {
+	border: 1px solid #99aa99;
+	border-radius: 5px;
+	font-size: 0.8em;
+	height: 2em;
+	width: 100%;
+	}
+
+
+.selBlogs_display .table_title{
+	background-color:#d6e1ff;
+	color:#1b0b6b;
+	font-size:1.5em;
+	letter-spacing:1px;
+	margin-bottom:10px;
+	padding:5px 10px;
+	}
+.selBlogs_display table{
+	border:1px solid #999999;
+	font-size:0.8em;
+	margin-bottom:20px;
+	width:100%;
+	}
+.selBlogs_display table:last-of-type{margin-bottom:0px;}
+.selBlogs_display table tr {
+	border:1px dotted #999999;
+}
+.selBlogs_display table tr th {
+	background-color:#cccccc;
+	border-right:1px dotted #999999;
+	padding:3px 10px;
+	}
+.selBlogs_display table tr th:last-of-type {border-right:none;}
+.selBlogs_display table tr td {
+	background-color:rgba(255,255,255,0.8);
+	border-right:1px dotted #999999;
+	padding:5px 10px;
+	}
+.selBlogs_display table tr td:last-of-type {border-right:none;}
+
+.selBlogs_display table tr .id {text-align:center;width:50px;}
+.selBlogs_display table tr .buildtype {text-align:center;width:50px;}
+
+.selBlogs_display table tr:hover {
+	background-color:rgba(255,0,0,0.5);
+	border-color:rgba(255,0,0,0.5);
+}
+.selBlogs_display table tr:hover td{}
+
+.selBlogs_display table tr.table-state-highlight{
+	background-color:rgba(0,0,0,0.3);
+	border:1px solid;
+}
+
+</style>
+<script>
+$(function() {
+
+//$( ".list_blogs" ).sortable({
+//	connectWith: "ul",
+//	dropOnEmpty: false
+//});
+
+//$("table.tp_lists").disableSelection();
+
+const _ERRCODE = {
+	'ER01':'チェックボックスを少なくとも一つ選んでください',
+	'ER02':'コピー先のウェブサイト・またはブログ一覧がありません'
+}
+
+const _TEMPLATE_TYPE = {
+	//	bt_list_type:
+	//		Publish,Modify,Delete,Copy
+	'type_i':{
+		name:'Index Templates',
+		bt_list_type:0b1111
+		},
+	'type_a':{
+		name:'Archive Templates',
+		bt_list_type:0b1111
+		},
+	'type_m':{
+		name:'Template Modules',
+		bt_list_type:0b0011
+		},
+	'type_s':{
+		name:'System Templates',
+		bt_list_type:0b0000
+		}
+}
+
+
+var MT_DATA_API = new MT.DataAPI({
+	baseUrl:  "http://localhost/mt/mt-data-api.cgi",
+	clientId: "api10entries"
+});
+
+//	escape HTML
+var _escapeHTML = function(_str) {
+	return _str.replace(/&/g, "&amp;")
+				.replace(/"/g, "&quot;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
+}
+
+//	時間表示フォーマット
+var _setDateFormat = function(_strDate) {
+	var _d = new Date(_strDate);
+	var _y = _d.getFullYear();
+	var _m = ('0'+parseInt(_d.getMonth()+1)).slice(-2);
+	var _a = ('0'+_d.getDate()).slice(-2);
+	var _h = ('0'+_d.getHours()).slice(-2);
+	var _i = ('0'+_d.getMinutes()).slice(-2);
+	var _s = ('0'+_d.getSeconds()).slice(-2);
+	return _y+'/'+_m+'/'+_a+' '+_h+':'+_i+':'+_s;
+}
+
+//	get Access Token
+var _getToken = function(res) {
+	if (res.error) {
+		if (res.error.code===401) {
+			location.href = MT_DATA_API.getAuthorizationUrl(location.href);
+		} else {
+		
+		}
+		return false;
+	}
+	_getListSites();
+	return true;
+}
+
+//	jsonから取得したテンプレートタイプより、以下を取得
+//	type_i:インデックステンプレート
+//	type_a:アーカイブテンプレート
+//	type_m:テンプレートモジュール
+//	type_s:システムテンプレート
+var _getType = function(_type) {
+	if (_type==='archive'||
+		_type==='entry'||
+		_type==='individual'||
+		_type==='page') {
+			return 'type_a';
+		}
+	if (_type==='comment_listing'||
+		_type==='comment_preview'||
+		_type==='dynamic_error'||
+		_type==='popup_image'||
+		_type==='search_results'||
+		_type==='comment_response') {
+		return 'type_s';
+		}
+	if (_type==='custom') {return 'type_m';}
+	return 'type_i';
+
+}
+
+const _buildType = {
+	'Static':'S',
+	'Do Not Publish':'N/P'
+	}
+
+var _setActionTemplate = {
+	//	テンプレートの複製
+	'multipulTemplate':function(res){
+			if (res.error) {
+				alert('error');
+				return false;
+			}
+			var _res=res;
+			//	相手先のテンプレートの存在有無
+			MT_DATA_API.listTemplates(
+				1,
+				{limit:0},
+				function(res) {
+					if (res.error) {
+						alert('error');
+						return false;
+					}
+					var _flagU=false;
+					var _bid=1;
+					var _tid=0;
+					for(var _i=0;_i<res.items.length;_i++){
+						if (_res.name===res.items[_i].name) {
+							_flagU=true;
+							_bid=res.items[_i].blog.id;
+							_tid=res.items[_i].id;
+							break;
+						}
+					}
+					//相手先テンプレート存在有→アップデート
+					if (_flagU===true) {
+						MT_DATA_API.publishTemplate(
+							parseInt(_bid),
+							parseInt(_tid),
+							_res,
+							_pageRefresh
+							);
+						return true;
+					}
+					//相手先テンプレート存在無→クリエイト
+					MT_DATA_API.createTemplate(
+						parseInt(_bid),
+						_res,
+						_pageRefresh
+						);
+				}
+			);
+
+			return true;
+	},
+	//	 テンプレートの更新
+	'updateTemplate':function(res){
+			if (res.error) {
+				alert('error');
+				return false;
+			}
+//			MT_DATA_API.updateTemplate(
+//				7,
+//				parseInt(res.id),
+//				res,
+//				_pageRefresh
+//				);
+			MT_DATA_API.publishTemplate(
+				7,
+				parseInt(res.id),
+				res,
+				_pageRefresh
+				);
+			return true;
+		}
+}
+
+//	getListSites
+//	MT内ウェブサイト・ブログ名取得
+var _getListSites = function() {
+	MT_DATA_API.listSites(
+		{limit:0,
+		sortOrder:'descend'
+		},function(res){
+			if (res.error) {
+				alert('error');
+				return false;
+			}
+			var _items=res.items;
+			var _lists={};
+			//	ハッシュ形式に格納する
+			for(var _i=0;_i<_items.length;_i++){
+				if(_items[_i].class==='website'){continue;}
+				if(_lists[_items[_i].parent.name]===undefined) {
+					_lists[_items[_i].parent.name]={};
+					_lists[_items[_i].parent.name].id=_items[_i].parent.id;
+					_lists[_items[_i].parent.name].data=[];
+				}
+				_lists[_items[_i].parent.name].data.push(
+						{id:_items[_i].id, name:_items[_i].name});
+			}
+
+			var _str='';
+			for(var _key in _lists) {
+				_str += '<option value="'+_lists[_key].id+'">▼'+_key+'</option>';
+				for(_j=0;_j<_lists[_key].data.length;_j++) {
+					_str += '<option value="'+_lists[_key].data[_j].id+'">'+_lists[_key].data[_j].name+'</option>';
+				}
+			}
+			$('.selBlogs .selBlogs_display_header select').append(_str);
+	});
+}
+
+
+//	_getListTemplates
+//	param. : type_i index_templates
+//			 type_a archive_templates
+//			 type_m template_modules
+//			 type_s system_templates
+//	return : none
+var _getListTemplates = function(_data, _ttype) {
+	var _str =
+		'<div class="list_temp_header">'+
+		'<div><p class="table_title">'+_TEMPLATE_TYPE[_ttype].name+'</p></div>'+
+		'<div class="list_bt_ctrl">'+
+		((_TEMPLATE_TYPE[_ttype].bt_list_type&0b1000)?'<input type="button" name="to_publish" value="Publish" disabled/>':'')+
+		((_TEMPLATE_TYPE[_ttype].bt_list_type&0b0100)?'<input type="button" name="to_modify" value="Modify" disabled/>':'')+
+		((_TEMPLATE_TYPE[_ttype].bt_list_type&0b0010)?'<input type="button" name="to_delete" value="Delete" disabled/>':'')+
+		((_TEMPLATE_TYPE[_ttype].bt_list_type&0b0001)?'<input type="button" name="to_copy" value="Copy" disabled/></div>':'')+
+		'</div><!-- /.list_temp_header -->'+
+		'<table class="tp_lists">'+
+		'<thead><tr>'+
+		'<th class="id">#</th>'+
+		'<th class="buildtype">BT</th>'+
+		'<th class="template">Template</th>'+
+		'</tr></thead><tbody>';
+		for(var _i=0;_i<_data.length;_i++) {
+			var _type = _getType(_data[_i].type);
+			if ( _type!==_ttype){continue;}
+			_str +=
+				'<tr data-tid="'+_data[_i].id+'">'+
+				'<td class="id"><input type="checkbox"></td>'+
+				'<td class="buildtype"></td>'+
+				'<td class="template">'+_data[_i].name+'</td>'+
+				'</tr>';
+		}
+		_str += '</tbody></table>';
+
+	return _str;
+}
+
+//	テンプレート一覧を取得
+//	$obj:左、または右のセレクトボックス
+var _getListTemplates_select = function($obj) {
+	if ($obj===null){console.log('_getListTemplates_select obj=null');return;}
+	return new Promise(function(resolve, reject) {
+		$('.'+$obj.parent().attr('class')).find('.list_blogs *').remove();
+		MT_DATA_API.listTemplates(
+			parseInt($obj.find('option:selected').val()),
+			{'limit':0,'sortBy':'name'},
+			function(res) {
+				if (res.error) {
+					reject(res.error);
+					return false;
+				}
+				console.log(res.items);
+				$('.selBlogs_display_header .'+$obj.parent().attr('class')).data('datanum',parseInt($obj.find('option:selected').val()))
+				$('.'+$obj.parent().attr('class')).eq(1).find('.list_blogs').empty().append(_getListTemplates(res.items,'type_i'));
+				$('.'+$obj.parent().attr('class')).eq(2).find('.list_blogs').empty().append(_getListTemplates(res.items,'type_a'));
+				$('.'+$obj.parent().attr('class')).eq(3).find('.list_blogs').empty().append(_getListTemplates(res.items,'type_m'));
+				$('.'+$obj.parent().attr('class')).eq(4).find('.list_blogs').empty().append(_getListTemplates(res.items,'type_s'));
+				resolve();
+				return true;
+			}
+		);
+
+	});
+}
+
+//	ページリフレッシュ
+var _pageRefresh = function(res) {
+/*
+	return new Promise(function(resolve, reject) {
+		if (res.error) {
+			alert('テンプレート更新に失敗しました。');
+			reject();
+//			return false;
+		}
+		alert('テンプレート更新に成功しました。');
+		//	リロードする
+		resolve();
+//		window.location.reload();
+//		return true;
+	});
+*/
+
+//	if (res.error) {
+//		alert('テンプレート更新に失敗しました。');
+//		return false;
+//	}
+	alert('テンプレート更新に成功しました。');
+	//	リロードする
+	window.location.reload();
+	return true;
+}
+
+//	相手先に自身のテンプレートを操作する
+//	_s_id:自身のウェブサイト・ブログID
+//	_o_id:相手のウェブサイト・ブログID
+//	_s_tid:自身のテンプレートID
+var _a=function(_o_id,
+				_s_id,
+				_s_tid) {
+	return new Promise(function(resp,rej) {
+		MT_DATA_API.getTemplate(
+			_s_id,
+			parseInt(_s_tid),
+			function(res) {
+				if (res.error) {
+					rej();
+					return;
+				}
+				//	相手先にテンプレート作成
+				MT_DATA_API.createTemplate(
+					_o_id,
+					res,
+					function(res) {
+						if (res.error) {
+							rej(res.error);
+							return;
+						}
+						console.log(res);
+						var _tid=res.blog.id+'_'+res.id;
+						//	作成済テンプレートをパブリッシュ
+						MT_DATA_API.publishTemplate(
+							parseInt(res.blog.id),
+							parseInt(res.id),
+							res,
+							function(res) {
+								if (res.error) {
+									rej(res.error);
+									return;
+								}
+								resp({'_o_id':_o_id,'_s_tid':_s_tid});
+							}
+							);	//	publishTemplate
+
+					}
+					);	//	createTemplate
+
+			}
+//				_setActionTemplate[_t_id]
+		);
+	});	//	Promise
+}
+
+//	ボタン制御
+const _bt_ctrl = {
+	//	status:ボタンステータスを制御
+	//	action:DataAPI処理スタート
+	'to_publish':{
+		status:function(_obj){
+			//	チェックボックスのオブジェクト
+
+			//	Publishボタンの有効無効ステータス設定
+			//	ひとつでもチェックがあれば有効
+			var _cn=(_obj.parents('.selBlogs_display_left').length!==0)
+						?'.selBlogs_display_left'
+						:'.selBlogs_display_right';
+			var $obj_disp=_obj.parents('.selBlogs_display '+_cn);
+			var _l=$obj_disp.find('input[type="checkbox"]:checked').length;
+			var $obj=$obj_disp.find('input[type="button"][value="Publish"]');
+			$obj.prop('disabled',(_l<=0));
+		},
+		action:function($this_btobj){
+			return new Promise(function(resp,rej) {
+				//	選択したボタンからチェック済みを採取
+				var $ic=$this_btobj.parents('.list_blogs')
+						.find('input[type="checkbox"]:checked');
+				if($ic.length===0){return false;}
+
+				var _cn=($this_btobj.parents('.selBlogs_display_left').length!==0)
+							?'.selBlogs_display_left'
+							:'.selBlogs_display_right';
+				//	チェックボックスのオブジェクト
+				$ic.each(function(){
+					var _tid = parseInt($ic.closest('tr').data('tid'));
+					var _bid = parseInt($('.selBlogs_display_header '+_cn+' select').val());
+					MT_DATA_API.publishTemplate(
+						_bid,_tid,
+						function(res) {
+							if (res.error) {
+								alert('error');
+								rej(res.error);
+								return false;
+							}
+							console.log('再構築を完了しました');
+							resp(_cn);
+						}
+					);//	DATA API
+				});//	each
+			});	//	Promise
+		}
+	},
+	'to_modify':{
+		status:function(_obj){
+			//	Modifyボタンの有効無効ステータス設定
+			//	ひとつチェックがあれば有効。それ以外は無効
+			var _cn=(_obj.parents('.selBlogs_display_left').length!==0)
+						?'.selBlogs_display_left'
+						:'.selBlogs_display_right';
+			var $obj_disp=_obj.parents('.selBlogs_display '+_cn);
+			var _l=$obj_disp.find('input[type="checkbox"]:checked').length;
+			var $obj=$obj_disp.find('input[type="button"][value="Modify"]');
+			$obj.prop('disabled',(_l!==1));
+		}
+	},
+	'to_delete':{
+		status:function(_obj){
+			//	Deleteボタンの有効無効ステータス設定
+			//	ひとつでもチェックがあれば有効
+			var _cn=(_obj.parents('.selBlogs_display_left').length!==0)
+						?'.selBlogs_display_left'
+						:'.selBlogs_display_right';
+			var $obj_disp=_obj.parents('.selBlogs_display '+_cn);
+			var _l=$obj_disp.find('input[type="checkbox"]:checked').length;
+			var $obj=$obj_disp.find('input[type="button"][value="Delete"]');
+			$obj.prop('disabled',(_l<=0));
+		},
+		action:function($this_btobj){
+			return new Promise(function(resp,rej) {
+				//	選択したボタンからチェック済みを採取
+				var $ic=$this_btobj.parents('.list_blogs')
+						.find('input[type="checkbox"]:checked');
+				if($ic.length===0){return false;}
+
+				var _cn=($this_btobj.parents('.selBlogs_display_left').length!==0)
+							?'.selBlogs_display_left'
+							:'.selBlogs_display_right';
+				//	チェックボックスのオブジェクト
+				$ic.each(function(){
+					var _tid = parseInt($(this).closest('tr').data('tid'));
+					var _bid = parseInt(
+								$('.selBlogs_display_header '+_cn+' select').val());
+					MT_DATA_API.deleteTemplate(
+						_bid,_tid,
+						function(res) {
+							if (res.error) {
+								alert('error');
+								rej(res.error);
+								return false;
+							}
+							console.log('削除完了しました。:'+_tid);	
+							resp(_cn);
+						}
+					);//	DATA API
+				});//	each
+			});	//	Promise
+		}	//	action
+	},
+	'to_copy':{
+		status:function(_obj){
+			//	Copyボタンの有効無効ステータス設定
+			//	ひとつでもチェックがあれば有効
+			var _cn=(_obj.parents('.selBlogs_display_left').length!==0)
+						?'.selBlogs_display_left'
+						:'.selBlogs_display_right';
+			var $obj_disp=_obj.parents('.selBlogs_display '+_cn);
+			var _l=$obj_disp.find('input[type="checkbox"]:checked').length;
+			var $obj=$obj_disp.find('input[type="button"][value="Copy"]');
+			$obj.prop('disabled',(_l<=0));
+		},
+		action:function($this_btobj){
+			return new Promise(function(resp,rej) {
+				//	選択したボタンからチェック済みを採取
+				var $ic=$this_btobj.parents('.list_blogs')
+						.find('input[type="checkbox"]:checked');
+				if($ic.length===0){return false;}
+
+				var _cn=($this_btobj.parents('.selBlogs_display_left').length!==0)
+							?'.selBlogs_display_left'
+							:'.selBlogs_display_right';
+
+				$ic.each(function(){
+					//	チェックボックスのオブジェクト
+					var _tid = parseInt($ic.closest('tr').data('tid'));
+					var _bid = parseInt(
+								$('.selBlogs_display_header '+_cn+' select').val());
+					MT_DATA_API.cloneTemplate(
+						_bid,_tid,
+						function(res) {
+							if (res.error) {
+								alert('error');
+								rej(res.error);
+								return false;
+							}
+							console.log('テンプレート複製を完了しました');
+							resp(_cn);
+						}
+					);//	DATA API
+				});//	each
+			});	//	Promise
+		}	//	action
+	},
+	'to_right':{
+		inputcheck:function() {
+			//	右カラムの一覧が表示されていない場合
+			if ( $('.selBlogs_display_right .list_blogs *').length===0 ) {
+				return _ERRCODE.ER02;
+			}
+			//	左カラムの一覧にチェックボックスが1つもない場合
+			if ( $('.selBlogs_display_left .list_blogs').find('input[type="checkbox"]:checked').length===0 ) {
+				return _ERRCODE.ER01;
+			}
+			return true;
+		},	//inputcheck
+		_action_copy:function() {
+			return new Promise(function(resp,rej) {
+				$('.selBlogs_display_left .list_blogs')
+					.find('input[type="checkbox"]:checked').each(function(){
+					var $this = $(this);
+					var _o_id = $('.selBlogs_display_header '+
+									'.selBlogs_display_right select').val();
+					var _s_id = $('.selBlogs_display_header '+
+									'.selBlogs_display_left select').val();
+					var _s_tpid = $this.closest('tr').data('tid');
+
+					//	複製呼出
+					_a(_o_id, _s_id, _s_tpid).then(
+						function(val) {
+							console.log('成功:'+val);
+							resp('.selBlogs_display_right');
+							},
+						function(err) {
+							console.log('失敗:'+err);
+							rej(err);
+							}
+						);
+				});	//each
+			});	//	Promise
+		}	//_action_copy
+	},	//	to_right
+	'to_left':{
+		inputcheck:function() {
+			//	右カラムの一覧が表示されていない場合
+			if ( $('.selBlogs_display_left .list_blogs *').length===0 ) {
+				return _ERRCODE.ER02;
+			}
+			//	右カラムの一覧にチェックボックスが1つもない場合
+			if ( $('.selBlogs_display_right .list_blogs').find('input[type="checkbox"]:checked').length===0 ) {
+				return _ERRCODE.ER01;
+			}
+			return true;
+		},	//inputcheck
+		_action_copy:function() {
+			$('.selBlogs_display_right .list_blogs')
+				.find('input[type="checkbox"]:checked').each(function(){
+				var $this = $(this);
+				var _r_id = $('.selBlogs_display_header '+
+							'.selBlogs_display_left select').val();
+				var _l_id = $('.selBlogs_display_header '+
+							'.selBlogs_display_right select').val();
+				var _l_tpid = $this.parent().parent().attr('class');
+
+				//	複製呼出
+				_a(_r_id, _l_id, _l_tpid).then(
+					function(val) {
+						console.log('成功:'+val);
+						//	正常終了後コピー先のブログに対して
+						//	テンプレート一覧を再呼出
+						_getListTemplates_select($('.selBlogs_display_header .selBlogs_display_left select')).then(
+							function(res) {
+								alert('complete!');
+							},
+							function(rej) {
+								alert('fail!');
+							}
+						);
+						},
+					function(err) {
+						console.log('失敗:'+err);
+						}
+					);
+			});	//each
+		}	//_action_copy
+	},
+	'to_diff':{}
+}
+
+//	ボタンアクションによるテンプレート更新
+//	真ん中ボタン用
+$('body').on('click',
+	'.bt.cp.to_right, '+
+	'.bt.mv.to_right, '+
+	'.bt.cp.to_left, '+
+	'.bt.mv.to_left',
+	function(e){
+		var _ret=_bt_ctrl[$(this).data('btctrl')].inputcheck();
+		if ( _ret!==true ) {
+			alert(_ret);
+			return;
+		}
+		if ( !confirm("選択したテンプレートを相手先のブログに複製します。\nよろしいですか？") ) {return;}
+		_bt_ctrl[$(this).data('btctrl')]._action_copy().then(
+			function(val) {
+				alert('処理が正常終了しました。');
+				_getListTemplates_select(
+					$('.selBlogs_display_header '+val+' select')).then(
+						function(res) {
+							console.log('Template Complete!');
+						},
+						function(rej) {
+							console.log('Template Fail!');
+						}
+					);
+				},
+			function(err) {
+				alert('処理失敗しました。');
+				console.log('失敗:'+err);
+				}
+		);
+
+});
+
+//	ボタンアクションによるテンプレート更新
+//	各テンプレートボタン用
+$('body').on('click',
+	'.list_bt_ctrl input[value="Publish"], '+
+	'.list_bt_ctrl input[value="Modify"], '+
+	'.list_bt_ctrl input[value="Delete"], '+
+	'.list_bt_ctrl input[value="Copy"]',
+	function(e){
+		var $this=$(this);
+		if ( !confirm("選択したテンプレートを処理します。") ) {return;}
+		_bt_ctrl[$this.attr('name')].action($this).then(
+			function(val) {
+				alert('処理が正常終了しました。');
+				_getListTemplates_select(
+					$('.selBlogs_display_header '+val+' select')).then(
+						function(res) {
+							console.log('Template Complete!');
+						},
+						function(rej) {
+							console.log('Template Fail!');
+						}
+					);
+				},
+			function(err) {
+				alert('処理失敗しました。');
+				console.log('失敗:'+err);
+				}
+		);
+});
+
+//	テンプレートリストボタンアクションによるテンプレート更新
+$('body').on(
+	'click',
+	'input[type="checkbox"]',
+	function(e){
+		_bt_ctrl.to_publish.status($(this));
+		_bt_ctrl.to_modify.status($(this));
+		_bt_ctrl.to_delete.status($(this));
+		_bt_ctrl.to_copy.status($(this));
+	}
+);
+
+//	jQueryUIController
+var _juictrl=function(){
+	var $dil =$('.selBlogs_display.type_i .selBlogs_display_left');
+	var $dir =$('.selBlogs_display.type_i .selBlogs_display_right');
+	var $dal =$('.selBlogs_display.type_a .selBlogs_display_left');
+	var $dar =$('.selBlogs_display.type_a .selBlogs_display_right');
+
+
+	$('.selBlogs_display.type_i table tbody tr').draggable({
+		start:function(){
+			console.log('draggable:start');
+//			$(this).parents('.tp_lists tbody').droppable('disable');
+		},
+		stop:function(){
+			console.log('droppable:stop');
+//			$(this).parents('.tp_lists tbody').droppable('enable');
+		},
+//		helper:'clone',
+		helper:function(e,ui){
+//			console.log(e);
+			var $tc=$(this).clone();
+			$(this).find('td').each(function(_i){
+				var $this=$(this);
+				$tc.find('td').eq(_i).width($this.outerWidth(true));
+			})
+			return $tc;
+		},
+		revert:true
+/*
+		helper:function(e){
+			var $this=$(this);
+			var $org=$this.children();
+			var $selected=$this.parent().children('.ui-selected').clone();
+			$selected.eq(0).children().each(function(_i){
+				//tdセルに幅を持たせる
+				$(this).width($org.eq(_i).outerWidth(true));
+			});
+			return $('<tr>').wrapInner($selected)
+							.wrapInner('<table/>')
+							.wrapInner('<td/>');
+		},
+*/
+	});
+//	}).draggable('disable');
+/*
+	$('.selBlogs_display.type_i table tbody').selectable({
+		filter:'> tr',//	tr以下の要素は選択対象外
+		selected:function(e, ui) {
+			$(ui.selected).draggable('enable');
+			console.log(ui.selected);
+		},
+		unselected:function(e, ui) {
+			$(ui.unselected).draggable('disable');
+			console.log(ui.unselected);
+		}
+	});
+*/
+	$('.selBlogs_display.type_i table tbody').droppable({
+		drop:function(e,$ui){
+			var $this=$(this);
+			console.log($ui);
+//			$('.selBlogs_display.type_i table tbody tr').removeClass('ui-selected');
+			var _cn=($this.parents('.selBlogs_display_left').length!==0)
+						?'.selBlogs_display_left'
+						:'.selBlogs_display_right';
+
+			var _cn2=($ui.draggable.parents('.selBlogs_display_left').length!==0)
+						?'.selBlogs_display_left'
+						:'.selBlogs_display_right';
+
+			if(_cn===_cn2) {
+//				$this.find('tr').index($($ui.draggable[0].rowIndex)).append($($ui.draggable));
+			} else{
+				$this.append($($ui.draggable));				
+			}
+
+//			ui.draggable.parents();
+//			$(ui.helper).parent().find('.ui-selected').remove();
+//			$('.selBlogs_display.type_i table tbody tr').draggable('disable');
+//			$('.selBlogs_display.type_i table tbody').selectable('refresh');
+		}
+	});
+
+
+/*==============
+	$dil.find("table.tp_lists tbody").selectable({
+		cancel:'.sort-handle, .ui-selected',
+		filter:'> tr'//	これをしないとtrの子要素にまで影響する
+	}).sortable({
+		connectWith: '.selBlogs_display.type_i .selBlogs_display_right tbody',
+		placeholder:'ui-state-highlight',
+		opacity:0.9,
+		items:'> tr',//これを設定してtrの子要素に影響させない
+		revert:10,
+		helper: _juictrl_helper,
+		//ドラッグした時にplaceholderの高さを選択要素分取る
+		start: _juictrl_start,
+		//ドロップ時処理
+		stop:_juictrl_stop
+	});
+
+	$dir.find("table.tp_lists tbody").selectable({
+		cancel:'.sort-handle, .ui-selected',
+		filter:'> tr'//	これをしないとtrの子要素にまで影響する
+	}).sortable({
+		connectWith: '.selBlogs_display.type_i .selBlogs_display_left tbody',
+		placeholder:'ui-state-highlight',
+		opacity:0.9,
+		items:'> tr',//これを設定してtrの子要素に影響させない
+		revert:10,
+		helper: _juictrl_helper,
+		//ドラッグした時にplaceholderの高さを選択要素分取る
+		start: _juictrl_start,
+		//ドロップ時処理
+		stop:_juictrl_stop
+	});
+
+	$dal.find("table.tp_lists tbody").sortable({
+		connectWith: '.selBlogs_display.type_a .selBlogs_display_right tbody',
+		placeholder:'table-state-highlight',
+		items:'> tr',//これを設定してtrの子要素に影響させない
+		revert:true
+	});
+	$dar.find("table.tp_lists tbody").sortable({
+		connectWith: '.selBlogs_display.type_a .selBlogs_display_left tbody',
+		placeholder:'table-state-highlight',
+		items:'> tr',//これを設定してtrの子要素に影響させない
+		revert:true
+	});
+==============*/
+
+
+	/*
+	$dil.find("table.tp_lists tbody").draggable({
+		connectToSortable:"table.tp_lists tbody",
+		helper:'clone',
+		revert:true
+	});
+	$dir.find("table.tp_lists tbody").droppable({
+		accept:'.selBlogs_display.type_i .selBlogs_display_left',
+		drop: function(event, ui) { //ドロップされた
+	        console.log('dropped');
+	    },
+	    over: function(event, ui) { //ドロップ可能状態になった
+	        console.log('over');
+	    },
+	    out: function(event, ui) { //ドロップ不可能状態になった
+	        console.log('out');
+	    }
+	});
+*/
+}
+
+var _juictrl_helper=function(e, item){
+//			console.log('item:'+item);//Dragされてるノード
+//			console.log('e:'+e);
+	if ( !item.hasClass('ui-selected') ) {
+		item.parent()
+			.children('.ui-selected')
+			.removeClass('ui-selected');
+		item.addClass('ui-selected');
+	}
+
+	var $org=item.children();
+	var $selected = item.parent().children('.ui-selected').clone();
+	$selected.eq(0).children().each(function(_i){
+		//tdセルに幅を持たせる
+		$(this).width($org.eq(_i).outerWidth(true));
+	});
+	//placeholder用の高さを取得しておく
+	if(e.ctrlKey) {
+		item.data('multidrag', $selected);
+		item.css("display", "table-row");
+	}else{
+		ph = item.outerHeight() * $selected.length;
+		item.data('multidrag', $selected)
+					.siblings('.ui-selected').remove();
+	}
+	console.log($selected);
+	return $('<tr>').wrap($selected).wrap('<table>').wrap('<td>')
+}// _juictrl_helper
+
+var _juictrl_start=function(e, ui){
+	//			console.log(ph);
+	console.log(ui.placeholder);
+	if(e.ctrlKey) {
+	}else{
+	}
+
+}// _juictrl_start
+
+var _juictrl_stop=function(e, ui){
+	var $selected = ui.item.data('multidrag');
+	ui.item.after($selected);
+	if(e.ctrlKey) {
+		//	ctrlキーは複製
+	}else{
+		ui.item.remove();
+	}
+
+}// _juictrl_stop
+
+
+$('.selBlogs_display_header select').on('change',function(){
+	if ( !confirm("選択したブログ一覧に表示します。\nよろしいですか？") ) {return;}
+	var $this=$(this);
+	console.log($this.parent().attr('class'));
+	console.log('id:'+$this.text());
+
+	_getListTemplates_select($this).then(
+		function(res) {
+			alert('complete!');
+			_juictrl();
+			//$("table.tp_lists tbody").sortable();
+		},
+		function(rej) {
+			alert('fail!');
+		}
+	);
+
+});
+
+
+MT_DATA_API.getToken(_getToken);
+
+});
+</script>
+
+
+</head>
+<body>
+
+
+<form>
+<table class="selBlogs">
+
+<tr class="selBlogs_display_header">
+<td class="selBlogs_display_left">
+<select>
+<option selected>▼ウェブサイトまたはブログを選択</option>
+</select>
+</td><!-- /.selBlogs_display_left -->
+<td class="selBlogs_display_middle">
+</td>
+<td class="selBlogs_display_right">
+<select>
+<option selected>▼ウェブサイトまたはブログを選択</option>
+</select>
+</td><!-- /.selBlogs_display_right -->
+</tr><!-- /.selBlogs_display -->
+
+<!-- index template -->
+<tr class="selBlogs_display type_i">
+<td class="selBlogs_display_left">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_left -->
+
+<td rowspan="4" class="selBlogs_display_middle">
+<div class="bt cp to_right" data-btctrl="to_right">→<p>(Copy)</p></div>
+<div class="bt mv to_right" data-btctrl="to_right">→<p>(Move)</p></div>
+<div class="bt cp to_left" data-btctrl="to_left">←<p>(Copy)</p></div>
+<div class="bt mv to_left" data-btctrl="to_left">←<p>(Move)</p></div>
+<div class="bt to_diff">DIFF</div>
+</td><!-- /.selBlogs_display_middle -->
+
+<td class="selBlogs_display_right">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_right -->
+</tr><!-- /.selBlogs_display -->
+
+<!-- archive template -->
+<tr class="selBlogs_display type_a">
+<td class="selBlogs_display_left">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_left -->
+
+<td class="selBlogs_display_right">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_right -->
+</tr><!-- /.selBlogs_display -->
+
+
+<!-- module template -->
+<tr class="selBlogs_display type_m">
+<td class="selBlogs_display_left">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_left -->
+
+<td class="selBlogs_display_right">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_right -->
+</tr><!-- /.selBlogs_display -->
+
+<!-- system template -->
+<tr class="selBlogs_display type_s">
+<td class="selBlogs_display_left">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_left -->
+
+<td class="selBlogs_display_right">
+<div class="list_blogs">
+</div><!-- ./.list_blogs -->
+</td><!-- /.selBlogs_display_right -->
+</tr><!-- /.selBlogs_display -->
+
+</table>
+<form><!-- /#selBlogs -->
+
+
+</body>
+</html>
