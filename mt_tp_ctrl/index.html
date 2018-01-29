@@ -2369,10 +2369,15 @@ var _set_drop_bt={
 				var $_gdf=$('#g_canvas_diff');
 				$('.tp_lists tr.diff').each(function(_i){
 					var $this=$(this);
-					var _w=
+					var _w=//ウェブサイト
 						$this.parents('.g_main_list').find('.tab .title.w').text();
-					var _b=
-						$this.parents('.g_main_list').find('.tab .title.b').text();
+					var _b=//ブログ
+						(function(){
+							let $_p=$this.parents('.g_main_list');
+							return ($_p.attr('class').indexOf('w_box')===-1)
+									?$this.parents('.g_main_list').find('.tab .title.b').text()
+									:'';
+						})();
 					var _t=
 						$this.find('.template').text();
 					var _bid=
